@@ -1,0 +1,139 @@
+/* Design tokens. Components read only these variables; a theme is just a block of values.
+   Any [data-theme] element (the <html>, or a preview card) re-scopes every token below. */
+
+:root {
+  --font: 'Outfit Variable', system-ui, 'Segoe UI', sans-serif;
+
+  --radius-frame: 30px;
+  --radius-panel: 22px;
+  --radius-row: 14px;
+  --radius-ctl: 13px;
+  --radius-pill: 999px;
+
+  --dur-instant: 80ms;
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --ease-release: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-layout: cubic-bezier(0.3, 0.7, 0.2, 1);
+
+  --glass-blur: 30px;
+}
+
+/* Derived tokens: computed from each theme's palette. Declared before the themes so a theme can override any. */
+[data-theme] {
+  --positive: #58b970;
+  --alert: #ff3b30;
+
+  --card: color-mix(in oklab, var(--page) 60%, transparent);
+  --card-solid: color-mix(in oklab, var(--page) 80%, var(--canvas));
+  --sidebar-bg: color-mix(in oklab, var(--page) 82%, transparent);
+  --surface-2: color-mix(in oklab, var(--surface) 40%, var(--page));
+  --line: color-mix(in oklab, var(--text) 10%, transparent);
+  --line-strong: color-mix(in oklab, var(--text) 20%, transparent);
+  --track: color-mix(in oklab, var(--text) 9%, transparent);
+
+  --pill-active: linear-gradient(120deg, var(--accent), var(--accent-glow));
+  --active-bg: linear-gradient(90deg, color-mix(in oklab, var(--accent-glow) 40%, transparent), transparent);
+  --accent-shadow: color-mix(in oklab, var(--accent-glow) 38%, transparent);
+  --focus-ring: color-mix(in oklab, var(--accent-glow) 45%, transparent);
+
+  --glass-sheen: rgb(255 255 255 / 0.07);
+  --spec: rgb(255 255 255 / 0.26);
+  --shadow: 0 18px 40px -14px rgb(0 0 0 / 0.55);
+
+  --blob-1: color-mix(in oklab, var(--accent-glow) 55%, transparent);
+  --blob-2: color-mix(in oklab, var(--accent) 65%, transparent);
+  --feature-bg: radial-gradient(
+    120% 140% at 100% 0%,
+    color-mix(in oklab, var(--accent-glow) 55%, transparent),
+    color-mix(in oklab, var(--accent) 22%, transparent) 45%,
+    color-mix(in oklab, var(--page) 90%, transparent) 75%
+  );
+
+  color: var(--text);
+}
+
+/* Before a theme is chosen: plain black and white, no colored light. */
+[data-theme='mono'] {
+  --page: #000000;
+  --canvas: #0b0b0b;
+  --surface: #2a2a2a;
+  --accent: color-mix(in oklab, #ffffff 82%, #000000);
+  --accent-glow: #ffffff;
+  --text: #ffffff;
+  --text-2: color-mix(in oklab, #ffffff 58%, #000000);
+  --on-accent: #000000;
+  --blob-1: transparent;
+  --blob-2: transparent;
+  --accent-shadow: rgb(255 255 255 / 0.18);
+  --c1: #ffffff;
+  --c2: color-mix(in oklab, #ffffff 70%, #000000);
+  --c3: color-mix(in oklab, #ffffff 45%, #000000);
+}
+
+/* Dolphin: #04202E #0A3C55 #0F5E83 #1786B4 #4FB3DA #98D5EE #E1F2FA */
+[data-theme='dolphin'] {
+  --page: #04202e;
+  --canvas: #0a3c55;
+  --surface: #0f5e83;
+  --accent: #1786b4;
+  --accent-glow: #4fb3da;
+  --text: #e1f2fa;
+  --text-2: #98d5ee;
+  --on-accent: #04202e;
+  --c1: #4fb3da;
+  --c2: #1786b4;
+  --c3: #98d5ee;
+}
+
+/* Black Widow: #CA0808 #120404 #270A0A #FFFFFF #000000 — red is the accent, so alerts turn orange (+ icon). */
+[data-theme='blackwidow'] {
+  --page: #000000;
+  --canvas: #120404;
+  --surface: #270a0a;
+  --surface-2: #270a0a;
+  --accent: #ca0808;
+  --accent-glow: color-mix(in oklab, #ca0808 72%, #ffffff);
+  --text: #ffffff;
+  --text-2: color-mix(in oklab, #ffffff 62%, #270a0a);
+  --on-accent: #ffffff;
+  --pill-active: linear-gradient(120deg, #ca0808, color-mix(in oklab, #ca0808 84%, #ffffff));
+  --alert: #ff9f0a;
+  --c1: #ca0808;
+  --c2: color-mix(in oklab, #ca0808 72%, #ffffff);
+  --c3: #ffffff;
+}
+
+/* Frog: #B7E5BA #5CA87C #288760 #1A5140 — green is the accent, so gains use the light green (+ icon). */
+[data-theme='frog'] {
+  --page: color-mix(in oklab, #1a5140 38%, #000000);
+  --canvas: #1a5140;
+  --surface: #288760;
+  --accent: #5ca87c;
+  --accent-glow: #b7e5ba;
+  --text: color-mix(in oklab, #b7e5ba 18%, #ffffff);
+  --text-2: color-mix(in oklab, #b7e5ba 78%, #1a5140);
+  --on-accent: color-mix(in oklab, #1a5140 70%, #000000);
+  --positive: #b7e5ba;
+  --c1: #b7e5ba;
+  --c2: #5ca87c;
+  --c3: #288760;
+}
+
+/* Wolf: #232526 #757F9A */
+[data-theme='wolf'] {
+  --page: color-mix(in oklab, #232526 55%, #000000);
+  --canvas: #232526;
+  --surface: color-mix(in oklab, #757f9a 35%, #232526);
+  --accent: #757f9a;
+  --accent-glow: color-mix(in oklab, #757f9a 55%, #ffffff);
+  --text: #ffffff;
+  --text-2: color-mix(in oklab, #757f9a 45%, #ffffff);
+  --on-accent: color-mix(in oklab, #232526 70%, #000000);
+  --c1: color-mix(in oklab, #757f9a 55%, #ffffff);
+  --c2: #757f9a;
+  --c3: #ffffff;
+}

@@ -1,0 +1,85 @@
+@keyframes zx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes zx-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-6px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes zx-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Entrance choreography (interactions §6.2): staggered rise, 80ms apart. */
+.stagger > * {
+  animation: zx-rise 500ms var(--ease-smooth) both;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 160ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 240ms;
+}
+.stagger > *:nth-child(n + 5) {
+  animation-delay: 320ms;
+}
+
+.shake {
+  animation: zx-shake var(--dur-slow) var(--ease-smooth);
+}
+
+.fade-in {
+  animation: zx-fade var(--dur-base) var(--ease-smooth) both;
+}
+
+/* Theme swap: whole-page cross-fade (icy §3). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: var(--ease-smooth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 150ms !important;
+    transition-timing-function: ease !important;
+    scroll-behavior: auto !important;
+  }
+}

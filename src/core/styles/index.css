@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import './tokens.css' layer(base);
+@import './base.css' layer(base);
+@import './glass.css' layer(components);
+@import './controls.css' layer(components);
+@import './layout.css' layer(components);
+@import './motion.css' layer(utilities);
+
+/* Tailwind utilities read the live theme tokens (bg-accent, text-ink-2, border-line…). */
+@theme inline {
+  --font-sans: var(--font);
+  --color-page: var(--page);
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-surface-2: var(--surface-2);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+  --color-on-accent: var(--on-accent);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-line: var(--line);
+  --color-positive: var(--positive);
+  --color-alert: var(--alert);
+}

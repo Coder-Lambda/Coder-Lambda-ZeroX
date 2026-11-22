@@ -1,0 +1,265 @@
+/* Tactile grammar (interactions §4): fast press, slow springy release. */
+.tactile {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+  will-change: transform;
+  transition:
+    transform var(--dur-slow) var(--ease-release),
+    box-shadow var(--dur-base) var(--ease-smooth),
+    filter var(--dur-base) var(--ease-smooth),
+    background-color var(--dur-base) var(--ease-smooth),
+    border-color var(--dur-base) var(--ease-smooth),
+    color var(--dur-base) var(--ease-smooth);
+}
+@media (hover: hover) {
+  .tactile:hover {
+    transform: translateY(-1px) scale(1.01);
+  }
+}
+.tactile:active,
+.tactile:hover:active {
+  transform: scale(0.97) translateY(1px);
+  filter: brightness(0.96);
+  transition-duration: 60ms;
+  transition-timing-function: var(--ease-press);
+}
+.tactile:disabled,
+.tactile[aria-disabled='true'] {
+  opacity: 0.45;
+  filter: saturate(0.4);
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* Buttons: pills for actions (icy rule 4), lit from above (uxstyling §4). */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--text);
+  background: none;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.btn-lg {
+  height: 58px;
+  padding: 0 30px;
+  font-size: 17px;
+}
+
+.btn-primary {
+  background: var(--pill-active);
+  color: var(--on-accent);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.4),
+    inset 0 -2px 2px rgb(0 0 0 / 0.2),
+    0 8px 20px -2px var(--accent-shadow);
+}
+@media (hover: hover) {
+  .btn-primary:hover {
+    filter: brightness(1.07);
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.4),
+      inset 0 -2px 2px rgb(0 0 0 / 0.2),
+      0 10px 26px -2px var(--accent-shadow);
+  }
+}
+.btn-primary:active {
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.18),
+    0 4px 8px -2px var(--accent-shadow);
+}
+
+.btn-secondary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--text) 10%, transparent),
+    color-mix(in oklab, var(--text) 3%, transparent)
+  );
+  border-color: var(--line-strong);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -1px 1px rgb(0 0 0 / 0.2),
+    0 6px 14px -6px rgb(0 0 0 / 0.5);
+}
+@media (hover: hover) {
+  .btn-secondary:hover {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--text) 15%, transparent),
+      color-mix(in oklab, var(--text) 6%, transparent)
+    );
+  }
+}
+.btn-secondary:active {
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.3);
+}
+
+.btn-ghost {
+  color: var(--text-2);
+  padding: 0 14px;
+}
+@media (hover: hover) {
+  .btn-ghost:hover {
+    color: var(--text);
+  }
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+/* Chips (uxstyling §3.5 recolored): selected stays slightly pressed in. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-strong);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--text) 12%, transparent),
+    color-mix(in oklab, var(--text) 4%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.12),
+    inset 0 -1px 2px rgb(0 0 0 / 0.25);
+}
+.chip[aria-pressed='true'] {
+  background: var(--pill-active);
+  color: var(--on-accent);
+  border-color: transparent;
+  transform: translateY(0.5px);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.25);
+}
+
+/* Inputs: debossed well with an accent halo on focus (uxstyling §3.9, interactions §5.4). */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field-label {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.input {
+  width: 100%;
+  height: 54px;
+  padding: 0 18px;
+  border-radius: var(--radius-ctl);
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.35),
+    inset 0 1px 2px rgb(0 0 0 / 0.25),
+    0 1px 0 rgb(255 255 255 / 0.06);
+  transition:
+    border-color var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth);
+}
+.input::placeholder {
+  color: color-mix(in oklab, var(--text-2) 70%, transparent);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent-glow);
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.35),
+    0 0 0 4px var(--focus-ring);
+}
+.input[aria-invalid='true'] {
+  border-color: var(--alert);
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.35),
+    0 0 0 4px color-mix(in oklab, var(--alert) 30%, transparent);
+}
+.input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 100px var(--surface-2) inset;
+}
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--alert);
+}
+
+/* Segmented control (icy §6): equal segments, one sliding indicator moved by transform only. */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.3);
+}
+.segmented-indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--n));
+  border-radius: var(--radius-pill);
+  background: var(--pill-active);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.35);
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform var(--dur-base) var(--ease-release);
+}
+.segmented-option {
+  position: relative;
+  z-index: 1;
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color var(--dur-base) var(--ease-smooth);
+}
+.segmented-option[aria-pressed='true'] {
+  color: var(--on-accent);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}

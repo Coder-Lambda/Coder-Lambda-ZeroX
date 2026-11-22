@@ -1,0 +1,18 @@
+{
+  "clientId": "_template",
+  "name": "Novo cliente",
+  "theme": "dolphin",
+  "enabledModules": [
+    "dashboard",
+    "collaborators",
+    "personalFinance",
+    "stock",
+    "businessFinance",
+    "mainDashboard",
+    "setAsWish"
+  ],
+  "hostingUrl": "",
+  "supabaseProjectRef": "",
+  "baseVersion": "0.1.0",
+  "notes": "Copie este arquivo para clients/<clientId>.json ao cadastrar um cliente novo."
+}
