@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 export function StatTile({ value, label }: { value: ReactNode; label: string }) {
   return (
     <div className="stat-tile glass">
-      <span className="stat-value num">{value}</span>
+      <span className="stat-value">{value}</span>
       <span className="stat-label">{label}</span>
     </div>
   )

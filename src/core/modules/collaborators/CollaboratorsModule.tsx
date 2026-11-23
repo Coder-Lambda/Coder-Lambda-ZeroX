@@ -31,15 +31,15 @@ export default function CollaboratorsModule() {
     <>
       <PageHead title={t.collab.title} sub={t.modules.collaborators.description} />
 
-      <div className="collab-nav glass">
-        <nav className="collab-tabs" aria-label={t.collab.title}>
+      <div className="module-nav glass">
+        <nav className="module-tabs" aria-label={t.collab.title}>
           {SECTIONS.map((s) => (
-            <NavLink key={s.id} to={`/colaboradores/${s.path}`} className="collab-tab tactile">
+            <NavLink key={s.id} to={`/colaboradores/${s.path}`} className="module-tab tactile">
               {t.collab.tabs[s.id]}
             </NavLink>
           ))}
         </nav>
-        <div className="collab-actions">
+        <div className="module-actions">
           {section === 'employees' && (
             <button
               type="button"
@@ -48,7 +48,7 @@ export default function CollaboratorsModule() {
               onClick={() => setDialog('import')}
             >
               <FileSpreadsheet />
-              <span className="collab-action-label">{t.collab.importSheet}</span>
+              <span className="module-action-label">{t.collab.importSheet}</span>
             </button>
           )}
           <button
@@ -58,8 +58,8 @@ export default function CollaboratorsModule() {
             onClick={() => setDialog(section)}
           >
             <Plus />
-            <span className="collab-action-label">{t.collab.add[section]}</span>
-            <span className="collab-action-short">{t.collab.addShort}</span>
+            <span className="module-action-label">{t.collab.add[section]}</span>
+            <span className="module-action-short">{t.collab.addShort}</span>
           </button>
         </div>
       </div>

@@ -1,0 +1,170 @@
+/* Charts (dataviz marks spec): thin marks, hairline solid grid, recessive axes, text in text tokens. */
+.chart {
+  position: relative;
+  border-radius: var(--radius-ctl);
+}
+.chart svg {
+  display: block;
+  overflow: visible;
+}
+.chart-grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.chart-axis text {
+  fill: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.chart-line.is-dashed {
+  stroke-dasharray: 6 5;
+}
+.chart-area {
+  opacity: 0.1;
+}
+.chart-dot {
+  stroke: var(--chart-surface);
+  stroke-width: 2;
+}
+.chart-crosshair {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.chart-band {
+  fill: color-mix(in oklab, var(--text) 6%, transparent);
+}
+.chart-hit {
+  fill: transparent;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+/* Tooltip: values lead, names follow; line keys for lines, swatches for bars. */
+.chart-tooltip {
+  position: absolute;
+  z-index: 3;
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--card-solid);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+.chart-tooltip-title {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+}
+.chart-tooltip-row + .chart-tooltip-row {
+  margin-top: 4px;
+}
+.chart-tooltip-row strong {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.chart-key {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.chart-key.is-dashed {
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px);
+}
+.chart-key.is-rect {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Ranked horizontal bars (HTML): one hue, ≤ 24px thick, rounded data-end, value at the tip. */
+.ranked-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ranked-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(90px, 30%) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 5px 6px;
+  border-radius: 10px;
+  outline-offset: 0;
+}
+.ranked-row.is-active {
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+}
+.ranked-label {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ranked-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ranked-bar {
+  flex-shrink: 0;
+  min-width: 4px;
+  max-width: calc(100% - 96px);
+  height: 16px;
+  border-radius: 0 4px 4px 0;
+}
+.ranked-value {
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Share of the total, floating above the hovered/focused row (never clipped by the card edge). */
+.ranked-tip {
+  top: 0;
+  left: 50%;
+}
+
+.chart-table {
+  max-height: 260px;
+  overflow-y: auto;
+}

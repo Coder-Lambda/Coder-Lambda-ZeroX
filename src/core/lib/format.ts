@@ -4,8 +4,8 @@ export function formatMoney(value: number | null | undefined) {
   return value == null ? '—' : money.format(value)
 }
 
-/** "R$ 1.234,56", "1234.56", "1.234" → number. Brazilian format first. */
-export function parseMoney(input: string): number | null {
+/** "1.234,5", "1234.5", "1.234" → number, Brazilian format first, rounded to `decimals`. */
+export function parseDecimal(input: string, decimals: number): number | null {
   const cleaned = input.replace(/[^\d,.-]/g, '')
   if (!cleaned) return null
   const normalized = cleaned.includes(',')
@@ -14,7 +14,13 @@ export function parseMoney(input: string): number | null {
       ? cleaned.replace(/\./g, '')
       : cleaned
   const value = Number(normalized)
-  return Number.isFinite(value) ? Math.round(value * 100) / 100 : null
+  const factor = 10 ** decimals
+  return Number.isFinite(value) ? Math.round(value * factor) / factor : null
+}
+
+/** "R$ 1.234,56", "1234.56", "1.234" → number. */
+export function parseMoney(input: string): number | null {
+  return parseDecimal(input, 2)
 }
 
 /** Value for a money <input>: 1234.5 → "1.234,50". */

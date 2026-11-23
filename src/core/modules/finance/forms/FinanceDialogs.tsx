@@ -1,0 +1,59 @@
+import { t } from '../../../i18n/pt-BR'
+import { Dialog } from '../../../ui/Dialog'
+import type { FinanceDialog } from '../FinanceContext'
+import { AccountsPanel } from './AccountsPanel'
+import { EntryForm } from './EntryForm'
+import { PayForm } from './PayForm'
+import { TitleForm } from './TitleForm'
+import { TitlesList } from './TitlesList'
+
+/** One host for every finance dialog; opening one closes the previous. */
+export function FinanceDialogs({ dialog, onClose }: { dialog: FinanceDialog | null; onClose: () => void }) {
+  const entryTitle =
+    dialog?.type === 'entry'
+      ? dialog.entry
+        ? t.finance.entry.edit
+        : dialog.entryType === 'in'
+          ? t.finance.entry.newIn
+          : t.finance.entry.newOut
+      : ''
+  const titleTitle =
+    dialog?.type === 'title'
+      ? dialog.title
+        ? t.finance.title.edit
+        : (dialog.kind ?? 'payable') === 'payable'
+          ? t.finance.title.newPayable
+          : t.finance.title.newReceivable
+      : ''
+
+  return (
+    <>
+      <Dialog open={dialog?.type === 'accounts'} onClose={onClose} title={t.finance.accounts.title}>
+        {dialog?.type === 'accounts' && <AccountsPanel hint={dialog.hint} />}
+      </Dialog>
+      <Dialog open={dialog?.type === 'entry'} onClose={onClose} title={entryTitle}>
+        {dialog?.type === 'entry' && <EntryForm entry={dialog.entry} initialType={dialog.entryType} onDone={onClose} />}
+      </Dialog>
+      <Dialog open={dialog?.type === 'title'} onClose={onClose} title={titleTitle}>
+        {dialog?.type === 'title' && (
+          <TitleForm title={dialog.title} initialKind={dialog.kind} initialDue={dialog.dueDate} onDone={onClose} />
+        )}
+      </Dialog>
+      <Dialog
+        open={dialog?.type === 'pay'}
+        onClose={onClose}
+        title={dialog?.type === 'pay' && dialog.title.kind === 'receivable' ? t.finance.pay.titleReceive : t.finance.pay.titlePay}
+      >
+        {dialog?.type === 'pay' && <PayForm title={dialog.title} onDone={onClose} />}
+      </Dialog>
+      <Dialog
+        open={dialog?.type === 'titles'}
+        onClose={onClose}
+        title={dialog?.type === 'titles' ? t.finance.title.listTitle[dialog.kind] : ''}
+        size="lg"
+      >
+        {dialog?.type === 'titles' && <TitlesList kind={dialog.kind} />}
+      </Dialog>
+    </>
+  )
+}

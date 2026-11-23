@@ -3,7 +3,7 @@ import { Handshake, Plus, Search, Truck } from 'lucide-react'
 import { t } from '../../../i18n/pt-BR'
 import { compareNames, formatMoney, normalize } from '../../../lib/format'
 import { PeopleList, type PersonItem } from '../PeopleList'
-import { StatTile } from '../StatTile'
+import { StatTile } from '../../../ui/StatTile'
 import { CONTACT_PATH, isSupplier, useContacts, type ContactKind } from './kinds'
 
 export function ContactsList({ kind, onAdd }: { kind: ContactKind; onAdd: () => void }) {
@@ -31,7 +31,7 @@ export function ContactsList({ kind, onAdd }: { kind: ContactKind; onAdd: () => 
   if (contacts.length === 0) {
     const Icon = kind === 'partners' ? Handshake : Truck
     return (
-      <div className="collab-body">
+      <div className="module-body">
         <div className="glass empty-hero">
           <span className="empty-hero-icon">
             <Icon />
@@ -50,7 +50,7 @@ export function ContactsList({ kind, onAdd }: { kind: ContactKind; onAdd: () => 
   const monthlyTotal = contacts.reduce((sum, c) => sum + (isSupplier(c) ? (c.monthlyAmount ?? 0) : 0), 0)
 
   return (
-    <div className="collab-body">
+    <div className="module-body">
       {kind === 'suppliers' && (
         <div className="stat-row stat-row-2">
           <StatTile value={contacts.length} label={t.collab.tabs.suppliers} />

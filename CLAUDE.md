@@ -33,13 +33,25 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 
 ## Build order (one prompt each)
 
-&onboarding& (done) → &collaborations& (done) → &personalfinance& → &stock& → &businessfinance& → &rulesandactions& →
+&onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& → &rulesandactions& →
 &widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
 `src/core/modules/registry.ts`, the others show their placeholder shell.
 
 - Collaborators (`src/core/modules/collaborators/`): employees (sheet import, filters, card with 7 widgets,
   warnings, files, PDF, presence list), partners, suppliers. `collaboratorStats()` in its `store.ts` is what
   &maindashboard& reads (total employees, payroll, average salary, absences today/month).
+- Finance (`src/core/modules/finance/`): `FinancePage` takes a `book` ('personal' | 'business'); rows carry `book`,
+  so &businessfinance& reuses the same accounts/entries/titles tables and page, adding employee payments.
+  `financeSummary()` in its `store.ts` is what &maindashboard& reads. Paying a title creates its entry.
+- Stock (`src/core/modules/stock/`): products + moves (in / out / adjust). Quantity = initialQuantity + moves;
+  editing a quantity records an adjustment so history and charts stay true. `stockSummary()` is what &maindashboard&
+  reads. Extra navbar tabs a client orders come from its extension's `moduleTabs.stock` (see `src/extensions/demo`).
+- Shared building blocks live in `src/core/ui` (MonthSwitch, StatTile, TextInput, Dialog, charts…) and
+  `src/core/styles/ui.css` (module navbar, lists, month switch). Module CSS files only hold module-specific rules,
+  because they load lazily with their module.
+- Charts (`src/core/ui/charts/`): hand-built SVG/HTML per the dataviz skill (line + crosshair, grouped columns,
+  ranked bars, table twin). Series colors `--series-1/2` were validated against every theme's card surface;
+  single-series charts use `--chart-accent`.
 - Data hooks: `useTable()` (src/core/data/useTable.ts) re-reads on every write; files go to IndexedDB (`fileStore`).
 
 ## Commands

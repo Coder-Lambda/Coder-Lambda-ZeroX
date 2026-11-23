@@ -26,7 +26,7 @@ export function ContactDetail({ kind }: { kind: ContactKind }) {
 
   if (!contact) {
     return (
-      <div className="collab-body">
+      <div className="module-body">
         {back}
         <p className="glass empty-state">{copy.notFound}</p>
       </div>
@@ -34,7 +34,7 @@ export function ContactDetail({ kind }: { kind: ContactKind }) {
   }
 
   return (
-    <div className="collab-body">
+    <div className="module-body">
       {back}
       <ContactCard kind={kind} contact={contact} />
     </div>

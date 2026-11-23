@@ -7,6 +7,7 @@ import { t } from '../../../i18n/pt-BR'
 import { moneyInputValue, parseMoney } from '../../../lib/format'
 import { haptic } from '../../../lib/haptic'
 import { ConfirmDialog, Dialog } from '../../../ui/Dialog'
+import { TextInput } from '../../../ui/TextInput'
 import { toast } from '../../../ui/Toaster'
 import { Toggle } from '../../../ui/Toggle'
 import { TABLES, removeEmployee, save } from '../store'
@@ -186,41 +187,5 @@ function EmployeeFormBody({ employee, focusField = 'name', onDone }: { employee?
         />
       )}
     </form>
-  )
-}
-
-interface TextInputProps {
-  id: string
-  label: string
-  value: string
-  onChange: (value: string) => void
-  type?: string
-  inputMode?: 'decimal' | 'tel' | 'email' | 'text'
-  placeholder?: string
-  prefix?: string
-  autoFocus?: boolean
-}
-
-export function TextInput({ id, label, value, onChange, type = 'text', inputMode, placeholder, prefix, autoFocus }: TextInputProps) {
-  return (
-    <div className="field">
-      <label className="field-label" htmlFor={id}>
-        {label}
-      </label>
-      <div className={prefix ? 'input-prefix' : undefined}>
-        {prefix && <span aria-hidden="true">{prefix}</span>}
-        <input
-          id={id}
-          className="input"
-          type={type}
-          inputMode={inputMode}
-          placeholder={placeholder}
-          data-autofocus={autoFocus || undefined}
-          maxLength={120}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
-    </div>
   )
 }

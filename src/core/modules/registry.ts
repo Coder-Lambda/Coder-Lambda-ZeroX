@@ -34,8 +34,20 @@ export const BASE_MODULES: ModuleDef[] = [
     shell: { kind: 'sections' },
     Page: lazy(() => import('./collaborators/CollaboratorsModule')),
   },
-  { id: 'personalFinance', path: 'financas-pessoais', icon: Wallet, shell: { kind: 'sections' } },
-  { id: 'stock', path: 'estoque', icon: Package, shell: { kind: 'widgets', widgets: 7, charts: 0 } },
+  {
+    id: 'personalFinance',
+    path: 'financas-pessoais',
+    icon: Wallet,
+    shell: { kind: 'sections' },
+    Page: lazy(() => import('./finance/PersonalFinanceModule')),
+  },
+  {
+    id: 'stock',
+    path: 'estoque',
+    icon: Package,
+    shell: { kind: 'widgets', widgets: 7, charts: 0 },
+    Page: lazy(() => import('./stock/StockModule')),
+  },
   { id: 'businessFinance', path: 'financas-empresa', icon: Building2, shell: { kind: 'sections' } },
   {
     id: 'mainDashboard',

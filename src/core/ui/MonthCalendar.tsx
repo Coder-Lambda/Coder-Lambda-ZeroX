@@ -12,9 +12,19 @@ interface MonthCalendarProps {
   maxDate?: string
   /** Small count shown under a day (e.g. absences). */
   marks?: Record<string, number>
+  /** Spoken description of a day's count, e.g. n => "2 faltas". */
+  markLabel?: (count: number) => string
 }
 
-export function MonthCalendar({ month, onMonthChange, selected, onSelect, maxDate, marks = {} }: MonthCalendarProps) {
+export function MonthCalendar({
+  month,
+  onMonthChange,
+  selected,
+  onSelect,
+  maxDate,
+  marks = {},
+  markLabel = String,
+}: MonthCalendarProps) {
   const year = month.getFullYear()
   const monthIndex = month.getMonth()
   const firstWeekday = new Date(year, monthIndex, 1).getDay()
@@ -69,7 +79,7 @@ export function MonthCalendar({ month, onMonthChange, selected, onSelect, maxDat
               type="button"
               className={`calendar-day num${key === today ? ' is-today' : ''}`}
               aria-pressed={key === selected}
-              aria-label={`${day} ${t.calendar.months[monthIndex]}${count ? ` · ${t.collab.presence.absencesCount(count)}` : ''}`}
+              aria-label={`${day} ${t.calendar.months[monthIndex]}${count ? ` · ${markLabel(count)}` : ''}`}
               disabled={disabled}
               onClick={() => onSelect(key)}
             >

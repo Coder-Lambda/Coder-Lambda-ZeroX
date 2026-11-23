@@ -48,6 +48,137 @@
   padding: 0 22px 20px;
 }
 
+/* ── Module page: stacked sections ── */
+.module-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Module navbar: sectors on the left, the current sector's actions on the right ── */
+.module-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-pill);
+}
+.module-tabs {
+  display: flex;
+  gap: 4px;
+}
+.module-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  color: var(--text-2);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.module-tab svg {
+  width: 16px;
+  height: 16px;
+}
+.module-tab[aria-current='page'] {
+  background: var(--pill-active);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.35);
+}
+.module-actions {
+  display: flex;
+  gap: 8px;
+}
+.module-action-short {
+  display: none;
+}
+
+/* ── Month filter: one row above everything it scopes (dataviz interaction rule) ── */
+.month-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+}
+.month-switch-label {
+  min-width: 128px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ── Lists of people / items ── */
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.people-groups {
+  display: flex;
+  flex-direction: column;
+}
+.people-letter {
+  margin: 12px 4px 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent-glow);
+}
+.people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px 9px 12px;
+  color: var(--text);
+  text-decoration: none;
+}
+.person-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.person-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-name.is-removed {
+  color: var(--alert);
+}
+.person-sub {
+  font-size: 12.5px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-aside {
+  flex-shrink: 0;
+}
+.person-chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-2);
+}
+
 /* ── Forms ── */
 .form-grid {
   display: grid;
@@ -257,6 +388,9 @@
 .stat-row-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+.stat-row-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .stat-tile {
   display: flex;
   flex-direction: column;
@@ -423,6 +557,7 @@
 }
 .section-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -471,11 +606,53 @@
 }
 
 @media (max-width: 760px) {
+  .module-nav {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: var(--radius-panel);
+  }
+  /* Tabs share the width; when a client's extra tabs don't fit, the row scrolls instead of clipping. */
+  .module-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .module-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .module-tab {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+  .module-actions .btn {
+    flex: 1;
+  }
+  .module-action-label {
+    display: none;
+  }
+  .module-action-short {
+    display: inline;
+  }
+  .month-switch-label {
+    min-width: 110px;
+  }
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .stat-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stat-row.stat-row-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .stat-row-3 .stat-tile {
+    padding: 12px;
+  }
+  .stat-row-3 .stat-value {
+    font-size: 18px;
   }
   .stat-value {
     font-size: 22px;

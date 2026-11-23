@@ -4,7 +4,7 @@ import { FileSpreadsheet, Plus, Search, Users } from 'lucide-react'
 import { t } from '../../../i18n/pt-BR'
 import { compareNames, formatDateTime, formatMoney, normalize } from '../../../lib/format'
 import { PeopleList, type PersonItem } from '../PeopleList'
-import { StatTile } from '../StatTile'
+import { StatTile } from '../../../ui/StatTile'
 import { collaboratorStats, useAbsences, useEmployees } from '../store'
 import type { Employee, EmployeeStatus } from '../types'
 import { EmployeesViewSwitch } from './EmployeesViewSwitch'
@@ -51,7 +51,7 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
 
   if (employees.length === 0) {
     return (
-      <div className="collab-body">
+      <div className="module-body">
         <div className="glass empty-hero">
           <span className="empty-hero-icon">
             <Users />
@@ -74,7 +74,7 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
   }
 
   return (
-    <div className="collab-body">
+    <div className="module-body">
       <EmployeesViewSwitch current="directory" />
 
       <div className="stat-row">

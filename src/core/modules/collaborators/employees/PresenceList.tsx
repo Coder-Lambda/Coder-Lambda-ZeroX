@@ -7,7 +7,7 @@ import { compareNames, formatDateKey, normalize, todayKey } from '../../../lib/f
 import { haptic } from '../../../lib/haptic'
 import { Avatar } from '../../../ui/Avatar'
 import { MonthCalendar } from '../../../ui/MonthCalendar'
-import { StatTile } from '../StatTile'
+import { StatTile } from '../../../ui/StatTile'
 import { setAbsent, useAbsences, useEmployees, wasOnList } from '../store'
 import { EmployeesViewSwitch } from './EmployeesViewSwitch'
 
@@ -52,7 +52,7 @@ export function PresenceList() {
   }
 
   return (
-    <div className="collab-body">
+    <div className="module-body">
       <EmployeesViewSwitch current="presence" />
       <p className="text-2">{t.collab.presence.sub}</p>
 
@@ -66,6 +66,7 @@ export function PresenceList() {
               onSelect={setSelected}
               maxDate={today}
               marks={marks}
+              markLabel={t.collab.presence.absencesCount}
             />
           </div>
           <div className="stat-row stat-row-2">

@@ -25,7 +25,7 @@ export function EmployeeDetail() {
 
   if (!employee) {
     return (
-      <div className="collab-body">
+      <div className="module-body">
         <BackLink />
         <p className="glass empty-state">{t.collab.card.notFound}</p>
       </div>
@@ -104,7 +104,7 @@ function EmployeeCard({ employee }: { employee: Employee }) {
   }
 
   return (
-    <div className="collab-body">
+    <div className="module-body">
       <BackLink />
 
       <header className="glass card employee-head">

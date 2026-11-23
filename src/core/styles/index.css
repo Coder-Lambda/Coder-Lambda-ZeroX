@@ -5,6 +5,7 @@
 @import './controls.css' layer(components);
 @import './layout.css' layer(components);
 @import './ui.css' layer(components);
+@import './charts.css' layer(components);
 @import './motion.css' layer(utilities);
 
 /* Tailwind utilities read the live theme tokens (bg-accent, text-ink-2, border-line…). */

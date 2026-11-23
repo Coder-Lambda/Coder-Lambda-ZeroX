@@ -21,6 +21,12 @@
 
   --glass-blur: 30px;
 
+  /* Chart series (dataviz reference palette, dark steps). Validated with validate_palette.js against
+     every theme's card surface: CVD ΔE 26.8, normal-vision ΔE 31.8, contrast ≥ 3:1. Same in every theme
+     so a series keeps its color when the theme changes. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+
   /* Brushed-metal material for physical controls (uxstyling §3.6); the same in every theme. */
   --metal-1: #ffffff;
   --metal-2: #ced4de;
@@ -44,6 +50,10 @@
   --active-bg: linear-gradient(90deg, color-mix(in oklab, var(--accent-glow) 40%, transparent), transparent);
   --accent-shadow: color-mix(in oklab, var(--accent-glow) 38%, transparent);
   --focus-ring: color-mix(in oklab, var(--accent-glow) 45%, transparent);
+
+  /* Single-series charts use the theme's accent glow (≥ 5.8:1 on every theme's card). */
+  --chart-accent: var(--accent-glow);
+  --chart-surface: var(--card-solid);
 
   --glass-sheen: rgb(255 255 255 / 0.07);
   --spec: rgb(255 255 255 / 0.26);
