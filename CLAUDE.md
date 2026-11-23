@@ -33,7 +33,7 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 
 ## Build order (one prompt each)
 
-&onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& → &rulesandactions& →
+&onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& (done) → &rulesandactions& →
 &widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
 `src/core/modules/registry.ts`, the others show their placeholder shell.
 
@@ -43,6 +43,11 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 - Finance (`src/core/modules/finance/`): `FinancePage` takes a `book` ('personal' | 'business'); rows carry `book`,
   so &businessfinance& reuses the same accounts/entries/titles tables and page, adding employee payments.
   `financeSummary()` in its `store.ts` is what &maindashboard& reads. Paying a title creates its entry.
+- Business finance (`src/core/modules/finance/business/`): same engine, book 'business', shared page wiring via
+  `useFinanceController`. Parts: 1 Contas bancárias, 2+3 Receitas e despesas (labels = `fin_categories` with
+  description/origin; entries carry `party`). Expenses also show payroll (from Colaboradores) and stock purchases
+  (receipts with `price` in Estoque); paying them creates entries with `source`/`sourceRef`. `businessSummary()`
+  is what &maindashboard& reads.
 - Stock (`src/core/modules/stock/`): products + moves (in / out / adjust). Quantity = initialQuantity + moves;
   editing a quantity records an adjustment so history and charts stay true. `stockSummary()` is what &maindashboard&
   reads. Extra navbar tabs a client orders come from its extension's `moduleTabs.stock` (see `src/extensions/demo`).

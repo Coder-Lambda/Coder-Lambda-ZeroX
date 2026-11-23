@@ -5,11 +5,11 @@ import { useScope } from '../../../data/useTable'
 import { t } from '../../../i18n/pt-BR'
 import { moneyInputValue, parseMoney } from '../../../lib/format'
 import { haptic } from '../../../lib/haptic'
+import { dayKey } from '../../../lib/month'
 import { ConfirmDialog } from '../../../ui/Dialog'
 import { TextInput } from '../../../ui/TextInput'
 import { toast } from '../../../ui/Toaster'
 import { useFinanceContext } from '../FinanceContext'
-import { dayKey } from '../../../lib/month'
 import { categorySuggestions, deleteEntry, saveEntry } from '../store'
 import type { FinEntry } from '../types'
 import { AccountSelect, CategoryInput, FieldError } from './fields'
@@ -17,21 +17,27 @@ import { AccountSelect, CategoryInput, FieldError } from './fields'
 interface Props {
   entry?: FinEntry
   initialType?: FinEntry['type']
+  /** Values to start a new entry with (e.g. paying the payroll or a stock purchase). */
+  preset?: Partial<FinEntry>
   onDone: () => void
 }
 
-export function EntryForm({ entry, initialType, onDone }: Props) {
+export function EntryForm({ entry, initialType, preset, onDone }: Props) {
   const { book, data, month, today } = useFinanceContext()
   const scope = useScope()
-  const [type, setType] = useState<FinEntry['type']>(entry?.type ?? initialType ?? 'out')
-  const [amount, setAmount] = useState(moneyInputValue(entry?.amount))
-  const [description, setDescription] = useState(entry?.description ?? '')
-  const [category, setCategory] = useState(entry?.category ?? '')
-  const [date, setDate] = useState(entry?.date ?? (today.startsWith(month) ? today : dayKey(month, 1)))
-  const [accountId, setAccountId] = useState(entry?.accountId ?? data.accounts[0]?.id ?? '')
+  const start = entry ?? preset
+  const [type, setType] = useState<FinEntry['type']>(start?.type ?? initialType ?? 'out')
+  const [amount, setAmount] = useState(moneyInputValue(start?.amount))
+  const [description, setDescription] = useState(start?.description ?? '')
+  const [category, setCategory] = useState(start?.category ?? '')
+  const [party, setParty] = useState(start?.party ?? '')
+  const [date, setDate] = useState(start?.date ?? (today.startsWith(month) ? today : dayKey(month, 1)))
+  const [accountId, setAccountId] = useState(start?.accountId ?? data.accounts[0]?.id ?? '')
   const [invalid, setInvalid] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const linkedTitle = entry?.titleId ? data.titles.find((ti) => ti.id === entry.titleId) : undefined
+  const source = start?.source ?? null
+  const isBusiness = book === 'business'
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -52,6 +58,9 @@ export function EntryForm({ entry, initialType, onDone }: Props) {
       description: description.trim(),
       category: category.trim(),
       titleId: entry?.titleId ?? null,
+      party: party.trim(),
+      source,
+      sourceRef: start?.sourceRef ?? null,
       createdAt: entry?.createdAt ?? new Date().toISOString(),
     })
     haptic('success')
@@ -61,7 +70,7 @@ export function EntryForm({ entry, initialType, onDone }: Props) {
 
   return (
     <form className="form-grid" onSubmit={submit} noValidate>
-      {!linkedTitle && (
+      {!linkedTitle && !source && (
         <div className="field span-2">
           <span className="field-label">{t.finance.entry.type}</span>
           <div className="ob-chips">
@@ -74,6 +83,7 @@ export function EntryForm({ entry, initialType, onDone }: Props) {
         </div>
       )}
       {linkedTitle && <p className="text-2 span-2 text-[13px]">{t.finance.entry.linkedNote(linkedTitle.description)}</p>}
+      {source && <p className="text-2 span-2 text-[13px]">{t.business.sourceNote[source]}</p>}
 
       <div>
         <TextInput
@@ -100,10 +110,26 @@ export function EntryForm({ entry, initialType, onDone }: Props) {
           label={t.finance.entry.description}
           value={description}
           onChange={setDescription}
-          placeholder={t.finance.entry.descriptionPlaceholder}
+          placeholder={isBusiness ? t.business.entryDescriptionPlaceholder : t.finance.entry.descriptionPlaceholder}
         />
       </div>
-      <CategoryInput id={`entry-category-${type}`} value={category} onChange={setCategory} suggestions={categorySuggestions(data, type)} />
+      {isBusiness && (
+        <div className="span-2">
+          <TextInput
+            id="entry-party"
+            label={type === 'in' ? t.business.originIn : t.business.originOut}
+            value={party}
+            onChange={setParty}
+            placeholder={type === 'in' ? t.business.originInPlaceholder : t.business.originOutPlaceholder}
+          />
+        </div>
+      )}
+      <CategoryInput
+        id={`entry-category-${type}`}
+        value={category}
+        onChange={setCategory}
+        suggestions={categorySuggestions(data, type, book)}
+      />
       <AccountSelect id="entry-account" accounts={data.accounts} value={accountId} onChange={setAccountId} />
 
       <div className="form-actions span-2">
@@ -126,7 +152,13 @@ export function EntryForm({ entry, initialType, onDone }: Props) {
           open={confirmDelete}
           onClose={() => setConfirmDelete(false)}
           title={t.finance.entry.deleteTitle}
-          message={linkedTitle ? t.finance.entry.deleteLinkedMessage : t.finance.entry.deleteMessage}
+          message={
+            linkedTitle
+              ? t.finance.entry.deleteLinkedMessage
+              : entry.source
+                ? t.business.deleteSourceMessage
+                : t.finance.entry.deleteMessage
+          }
           confirmLabel={t.common.delete}
           danger
           onConfirm={() => {

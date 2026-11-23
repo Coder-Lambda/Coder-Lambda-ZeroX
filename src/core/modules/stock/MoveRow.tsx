@@ -1,5 +1,5 @@
 import { t } from '../../i18n/pt-BR'
-import { formatDateKey } from '../../lib/format'
+import { formatDateKey, formatMoney } from '../../lib/format'
 import { formatQty } from './format'
 import { useStockContext } from './StockContext'
 import type { StockMove } from './types'
@@ -23,7 +23,8 @@ export function MoveRow({ move, showProduct = true, showDate = true }: MoveRowPr
         ? (move.type === 'in' ? t.stock.moves.fromLabel : t.stock.moves.toLabel)(move.party)
         : ''
   const title = showProduct ? (product?.name ?? '—') : where || t.stock.moves.kind[move.type]
-  const sub = (showProduct ? [where, move.description] : [move.description]).filter(Boolean).join(' · ')
+  const paid = move.price ? formatMoney(move.price) : null
+  const sub = (showProduct ? [where, paid, move.description] : [paid, move.description]).filter(Boolean).join(' · ')
 
   return (
     <li>

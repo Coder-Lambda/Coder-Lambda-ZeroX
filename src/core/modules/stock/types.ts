@@ -28,6 +28,8 @@ export interface StockMove extends BusinessRow {
   description: string
   /** Where it came from (in) or where it is going (out). */
   party: string
+  /** What was paid for a receipt, in R$ (optional). Business finance lists it under stock purchases. */
+  price?: number | null
   createdAt: string
 }
 

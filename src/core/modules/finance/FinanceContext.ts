@@ -1,13 +1,14 @@
 import { createContext, useContext } from 'react'
 import type { financeSummary } from './store'
-import type { FinanceBook, FinanceData, FinEntry, FinTitle } from './types'
+import type { FinanceBook, FinanceData, FinCategory, FinEntry, FinTitle } from './types'
 
 export type FinanceDialog =
   | { type: 'accounts'; hint?: boolean }
-  | { type: 'entry'; entry?: FinEntry; entryType?: FinEntry['type'] }
+  | { type: 'entry'; entry?: FinEntry; entryType?: FinEntry['type']; preset?: Partial<FinEntry> }
   | { type: 'title'; title?: FinTitle; kind?: FinTitle['kind']; dueDate?: string }
   | { type: 'pay'; title: FinTitle }
   | { type: 'titles'; kind: FinTitle['kind'] }
+  | { type: 'label'; labelType: FinCategory['type']; label?: FinCategory }
 
 export interface FinanceContextValue {
   book: FinanceBook

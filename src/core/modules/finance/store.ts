@@ -4,9 +4,15 @@ import { localDb, newId } from '../../data/localDb'
 import { useTable } from '../../data/useTable'
 import { t } from '../../i18n/pt-BR'
 import { addMonths, dayKey, daysInMonth } from '../../lib/month'
-import type { FinAccount, FinanceBook, FinanceData, FinEntry, FinTitle } from './types'
+import { normalize } from '../../lib/format'
+import type { FinAccount, FinanceBook, FinanceData, FinCategory, FinEntry, FinTitle } from './types'
 
-export const FIN_TABLES = { accounts: 'fin_accounts', entries: 'fin_entries', titles: 'fin_titles' } as const
+export const FIN_TABLES = {
+  accounts: 'fin_accounts',
+  entries: 'fin_entries',
+  titles: 'fin_titles',
+  categories: 'fin_categories',
+} as const
 
 type Scope = { tenant_id: string; business_id: string }
 
@@ -14,13 +20,15 @@ export function useFinance(book: FinanceBook): FinanceData {
   const accounts = useTable<FinAccount>(FIN_TABLES.accounts)
   const entries = useTable<FinEntry>(FIN_TABLES.entries)
   const titles = useTable<FinTitle>(FIN_TABLES.titles)
+  const categories = useTable<FinCategory>(FIN_TABLES.categories)
   return useMemo(
     () => ({
       accounts: accounts.filter((a) => a.book === book),
       entries: entries.filter((e) => e.book === book),
       titles: titles.filter((ti) => ti.book === book),
+      categories: categories.filter((c) => c.book === book),
     }),
-    [accounts, entries, titles, book],
+    [accounts, entries, titles, categories, book],
   )
 }
 
@@ -109,13 +117,27 @@ export function categoryBreakdown(entries: FinEntry[], month: string, top = 7) {
   return [...ranked.slice(0, top - 1), { label: t.finance.charts.others, value: round(rest) }]
 }
 
-/** Categories offered in the form: defaults plus everything already used for that type. */
-export function categorySuggestions(data: FinanceData, type: FinEntry['type']) {
+/** Categories offered in the form: the book's labels, personal defaults, and everything already used for that type. */
+export function categorySuggestions(data: FinanceData, type: FinEntry['type'], book: FinanceBook) {
+  const labels = data.categories.filter((c) => c.type === type).map((c) => c.name)
   const used = [
     ...data.entries.filter((e) => e.type === type).map((e) => e.category),
     ...data.titles.filter((ti) => (ti.kind === 'receivable' ? 'in' : 'out') === type).map((ti) => ti.category),
   ]
-  return [...new Set([...t.finance.categories[type], ...used].filter(Boolean))]
+  const defaults = book === 'personal' ? t.finance.categories[type] : []
+  return [...new Set([...labels, ...defaults, ...used].filter(Boolean))]
+}
+
+/** Month total per category name (case/accent-insensitive), for one entry type. */
+export function categoryTotals(entries: FinEntry[], month: string, type: FinEntry['type']) {
+  const totals = new Map<string, number>()
+  entries
+    .filter((e) => e.type === type && e.date.startsWith(month))
+    .forEach((e) => {
+      const key = normalize(e.category)
+      totals.set(key, round((totals.get(key) ?? 0) + e.amount))
+    })
+  return totals
 }
 
 // ── Writes ───────────────────────────────────────────────────────────────
@@ -126,6 +148,25 @@ export const saveTitle = (title: FinTitle) => localDb.upsert<FinTitle>(FIN_TABLE
 
 export function deleteAccount(account: FinAccount) {
   localDb.remove<FinAccount>(FIN_TABLES.accounts, CLIENT_ID, (row) => row.id === account.id)
+}
+
+/** Saves a label; a rename carries over to the entries filed under the old name, so their totals follow. */
+export function saveCategory(category: FinCategory, previousName?: string) {
+  localDb.upsert<FinCategory>(FIN_TABLES.categories, category)
+  if (!previousName || normalize(previousName) === normalize(category.name)) return
+  localDb
+    .list<FinEntry>(FIN_TABLES.entries, CLIENT_ID, (e) =>
+      e.business_id === category.business_id &&
+      e.book === category.book &&
+      e.type === category.type &&
+      normalize(e.category) === normalize(previousName),
+    )
+    .forEach((e) => saveEntry({ ...e, category: category.name }))
+}
+
+/** Removes the label only; entries keep their category text. */
+export function deleteCategory(category: FinCategory) {
+  localDb.remove<FinCategory>(FIN_TABLES.categories, CLIENT_ID, (row) => row.id === category.id)
 }
 
 /** Deleting a title's payment entry reopens the title. */

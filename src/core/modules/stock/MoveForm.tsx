@@ -3,7 +3,7 @@ import { CircleAlert, Trash2 } from 'lucide-react'
 import { newId } from '../../data/localDb'
 import { useScope } from '../../data/useTable'
 import { t } from '../../i18n/pt-BR'
-import { parseDecimal } from '../../lib/format'
+import { moneyInputValue, parseDecimal, parseMoney } from '../../lib/format'
 import { haptic } from '../../lib/haptic'
 import { ConfirmDialog } from '../../ui/Dialog'
 import { TextInput } from '../../ui/TextInput'
@@ -32,6 +32,7 @@ export function MoveForm({ type, move, productId, onDone }: Props) {
   const [date, setDate] = useState(move?.date ?? today)
   const [party, setParty] = useState(move?.party ?? '')
   const [description, setDescription] = useState(move?.description ?? '')
+  const [price, setPrice] = useState(moneyInputValue(move?.price))
   const [problem, setProblem] = useState<Problem>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -79,6 +80,7 @@ export function MoveForm({ type, move, productId, onDone }: Props) {
       date: date || today,
       description: description.trim(),
       party: party.trim(),
+      price: type === 'in' ? parseMoney(price) : null,
       createdAt: move?.createdAt ?? new Date().toISOString(),
     })
     haptic('success')
@@ -142,6 +144,20 @@ export function MoveForm({ type, move, productId, onDone }: Props) {
         describedBy="move-error"
       />
       <TextInput id="move-date" label={t.stock.moves.date} value={date} onChange={setDate} type="date" />
+      {type === 'in' && (
+        <div className="span-2">
+          <TextInput
+            id="move-price"
+            label={t.stock.moves.price}
+            value={price}
+            onChange={setPrice}
+            inputMode="decimal"
+            placeholder="0,00"
+            prefix="R$"
+          />
+          <p className="text-2 mt-1 text-[12.5px]">{t.stock.moves.priceHint}</p>
+        </div>
+      )}
       <div className="span-2">
         <TextInput
           id="move-party"

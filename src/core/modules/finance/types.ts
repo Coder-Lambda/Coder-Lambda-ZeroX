@@ -23,6 +23,22 @@ export interface FinEntry extends BusinessRow {
   category: string
   /** Set when this entry is the payment of a title. */
   titleId: string | null
+  /** Where the money came from or went to (business book). */
+  party?: string
+  /** What generated the expense, when it wasn't typed freely: the payroll or a stock purchase. */
+  source?: 'payroll' | 'stock' | null
+  /** Payroll: the month 'YYYY-MM'. Stock: the stock receipt id. */
+  sourceRef?: string | null
+  createdAt: string
+}
+
+/** An income or expense label of the business, with what it is and where it comes from. */
+export interface FinCategory extends BusinessRow {
+  book: FinanceBook
+  type: 'in' | 'out'
+  name: string
+  description: string
+  origin: string
   createdAt: string
 }
 
@@ -46,4 +62,5 @@ export interface FinanceData {
   accounts: FinAccount[]
   entries: FinEntry[]
   titles: FinTitle[]
+  categories: FinCategory[]
 }

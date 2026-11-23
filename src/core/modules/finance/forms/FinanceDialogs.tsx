@@ -3,6 +3,7 @@ import { Dialog } from '../../../ui/Dialog'
 import type { FinanceDialog } from '../FinanceContext'
 import { AccountsPanel } from './AccountsPanel'
 import { EntryForm } from './EntryForm'
+import { LabelForm } from './LabelForm'
 import { PayForm } from './PayForm'
 import { TitleForm } from './TitleForm'
 import { TitlesList } from './TitlesList'
@@ -13,9 +14,11 @@ export function FinanceDialogs({ dialog, onClose }: { dialog: FinanceDialog | nu
     dialog?.type === 'entry'
       ? dialog.entry
         ? t.finance.entry.edit
-        : dialog.entryType === 'in'
-          ? t.finance.entry.newIn
-          : t.finance.entry.newOut
+        : dialog.preset?.source
+          ? t.business.payTitle[dialog.preset.source]
+          : (dialog.entryType ?? dialog.preset?.type) === 'in'
+            ? t.finance.entry.newIn
+            : t.finance.entry.newOut
       : ''
   const titleTitle =
     dialog?.type === 'title'
@@ -32,7 +35,9 @@ export function FinanceDialogs({ dialog, onClose }: { dialog: FinanceDialog | nu
         {dialog?.type === 'accounts' && <AccountsPanel hint={dialog.hint} />}
       </Dialog>
       <Dialog open={dialog?.type === 'entry'} onClose={onClose} title={entryTitle}>
-        {dialog?.type === 'entry' && <EntryForm entry={dialog.entry} initialType={dialog.entryType} onDone={onClose} />}
+        {dialog?.type === 'entry' && (
+          <EntryForm entry={dialog.entry} initialType={dialog.entryType} preset={dialog.preset} onDone={onClose} />
+        )}
       </Dialog>
       <Dialog open={dialog?.type === 'title'} onClose={onClose} title={titleTitle}>
         {dialog?.type === 'title' && (
@@ -53,6 +58,21 @@ export function FinanceDialogs({ dialog, onClose }: { dialog: FinanceDialog | nu
         size="lg"
       >
         {dialog?.type === 'titles' && <TitlesList kind={dialog.kind} />}
+      </Dialog>
+      <Dialog
+        open={dialog?.type === 'label'}
+        onClose={onClose}
+        title={
+          dialog?.type !== 'label'
+            ? ''
+            : dialog.label
+              ? t.business.labels.editTitle
+              : dialog.labelType === 'in'
+                ? t.business.labels.newIn
+                : t.business.labels.newOut
+        }
+      >
+        {dialog?.type === 'label' && <LabelForm type={dialog.labelType} label={dialog.label} onDone={onClose} />}
       </Dialog>
     </>
   )

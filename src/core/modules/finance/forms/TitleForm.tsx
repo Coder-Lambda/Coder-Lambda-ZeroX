@@ -141,7 +141,7 @@ export function TitleForm({ title, initialKind, initialDue, onDone }: Props) {
           id={`title-category-${kind}`}
           value={category}
           onChange={setCategory}
-          suggestions={categorySuggestions(data, kind === 'receivable' ? 'in' : 'out')}
+          suggestions={categorySuggestions(data, kind === 'receivable' ? 'in' : 'out', book)}
         />
       </div>
       <div className="span-2">

@@ -48,7 +48,13 @@ export const BASE_MODULES: ModuleDef[] = [
     shell: { kind: 'widgets', widgets: 7, charts: 0 },
     Page: lazy(() => import('./stock/StockModule')),
   },
-  { id: 'businessFinance', path: 'financas-empresa', icon: Building2, shell: { kind: 'sections' } },
+  {
+    id: 'businessFinance',
+    path: 'financas-empresa',
+    icon: Building2,
+    shell: { kind: 'sections' },
+    Page: lazy(() => import('./finance/business/BusinessFinanceModule')),
+  },
   {
     id: 'mainDashboard',
     path: 'dashboard-principal',
