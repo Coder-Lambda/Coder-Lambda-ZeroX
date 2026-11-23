@@ -20,6 +20,11 @@
   --ease-layout: cubic-bezier(0.3, 0.7, 0.2, 1);
 
   --glass-blur: 30px;
+
+  /* Brushed-metal material for physical controls (uxstyling §3.6); the same in every theme. */
+  --metal-1: #ffffff;
+  --metal-2: #ced4de;
+  --metal-3: #8a94a6;
 }
 
 /* Derived tokens: computed from each theme's palette. Declared before the themes so a theme can override any. */

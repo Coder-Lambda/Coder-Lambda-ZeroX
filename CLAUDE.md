@@ -33,9 +33,14 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 
 ## Build order (one prompt each)
 
-&onboarding& (done) → &collaborations& → &personalfinance& → &stock& → &businessfinance& → &rulesandactions& →
-&widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; module placeholders live in
-`src/core/modules/`.
+&onboarding& (done) → &collaborations& (done) → &personalfinance& → &stock& → &businessfinance& → &rulesandactions& →
+&widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
+`src/core/modules/registry.ts`, the others show their placeholder shell.
+
+- Collaborators (`src/core/modules/collaborators/`): employees (sheet import, filters, card with 7 widgets,
+  warnings, files, PDF, presence list), partners, suppliers. `collaboratorStats()` in its `store.ts` is what
+  &maindashboard& reads (total employees, payroll, average salary, absences today/month).
+- Data hooks: `useTable()` (src/core/data/useTable.ts) re-reads on every write; files go to IndexedDB (`fileStore`).
 
 ## Commands
 

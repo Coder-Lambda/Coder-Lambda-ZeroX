@@ -8,6 +8,15 @@ export interface TenantRow {
 const memory = new Map<string, unknown[]>()
 const storageKey = (table: string) => `zerox:db:${table}`
 
+// Every write bumps the version so React views (useTable) re-read.
+let version = 0
+const listeners = new Set<() => void>()
+
+function notify() {
+  version += 1
+  listeners.forEach((listener) => listener())
+}
+
 function readTable<T>(table: string): T[] {
   try {
     const raw = localStorage.getItem(storageKey(table))
@@ -23,8 +32,9 @@ function writeTable<T>(table: string, rows: T[]) {
   try {
     localStorage.setItem(storageKey(table), JSON.stringify(rows))
   } catch {
-    // Storage blocked: data lives in memory for this session only.
+    // Storage blocked or full: data lives in memory for this session only.
   }
+  notify()
 }
 
 export const localDb = {
@@ -44,6 +54,38 @@ export const localDb = {
     writeTable(table, rows)
     return row
   },
+
+  insertMany<T extends TenantRow>(table: string, newRows: T[]) {
+    if (newRows.length === 0) return
+    writeTable(table, [...readTable<T>(table), ...newRows])
+  },
+
+  remove<T extends TenantRow>(table: string, tenantId: string, where: (row: T) => boolean) {
+    const rows = readTable<T>(table)
+    const kept = rows.filter((row) => row.tenant_id !== tenantId || !where(row))
+    if (kept.length !== rows.length) writeTable(table, kept)
+  },
+
+  subscribe(listener: () => void) {
+    listeners.add(listener)
+    return () => {
+      listeners.delete(listener)
+    }
+  },
+
+  getVersion() {
+    return version
+  },
+}
+
+// Another tab wrote to the same storage: refresh this one too.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key?.startsWith('zerox:db:')) {
+      memory.clear()
+      notify()
+    }
+  })
 }
 
 export function newId(prefix: string) {

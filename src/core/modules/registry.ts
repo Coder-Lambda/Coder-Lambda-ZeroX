@@ -1,3 +1,4 @@
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 import {
   Building2,
   ChartNoAxesCombined,
@@ -20,11 +21,19 @@ export interface ModuleDef {
   path: string
   icon: LucideIcon
   shell: ModuleShell
+  /** The built module. Until a module's prompt builds it, the placeholder shell is shown. */
+  Page?: LazyExoticComponent<ComponentType>
 }
 
 export const BASE_MODULES: ModuleDef[] = [
   { id: 'dashboard', path: 'dashboard', icon: LayoutDashboard, shell: { kind: 'widgets', widgets: 6, charts: 1 } },
-  { id: 'collaborators', path: 'colaboradores', icon: Users, shell: { kind: 'sections' } },
+  {
+    id: 'collaborators',
+    path: 'colaboradores',
+    icon: Users,
+    shell: { kind: 'sections' },
+    Page: lazy(() => import('./collaborators/CollaboratorsModule')),
+  },
   { id: 'personalFinance', path: 'financas-pessoais', icon: Wallet, shell: { kind: 'sections' } },
   { id: 'stock', path: 'estoque', icon: Package, shell: { kind: 'widgets', widgets: 7, charts: 0 } },
   { id: 'businessFinance', path: 'financas-empresa', icon: Building2, shell: { kind: 'sections' } },

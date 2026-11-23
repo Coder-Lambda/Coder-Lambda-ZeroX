@@ -1,5 +1,5 @@
-import { Suspense, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { PanelLeftClose, PanelLeftOpen, Settings, WandSparkles, type LucideIcon } from 'lucide-react'
 import { useSession } from '../auth/SessionProvider'
 import type { ModuleId } from '../config/types'
@@ -9,6 +9,7 @@ import { t } from '../i18n/pt-BR'
 import { BASE_MODULES, SET_AS_WISH_PATH } from '../modules/registry'
 import { Blobs } from '../ui/Blobs'
 import { Logo } from '../ui/Logo'
+import { Toaster } from '../ui/Toaster'
 
 interface NavEntry {
   to: string
@@ -21,6 +22,13 @@ export function AppShell() {
   const enabled = active?.modules
   const extensionState = useClientExtension(enabled?.setAsWish === true)
   const [collapsed, setCollapsed] = useState(() => readPref('sidebar-collapsed') === '1')
+  const { pathname } = useLocation()
+  const contentRef = useRef<HTMLElement>(null)
+
+  // The content area scrolls, not the window: start each new page at the top.
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 })
+  }, [pathname])
 
   if (!active || !enabled) return null
 
@@ -97,7 +105,7 @@ export function AppShell() {
           </NavLink>
         </header>
 
-        <main id="conteudo" className="app-content" tabIndex={-1}>
+        <main id="conteudo" ref={contentRef} className="app-content" tabIndex={-1}>
           <Suspense fallback={<p className="text-2">{t.shell.loading}</p>}>
             <Outlet context={extensionState} />
           </Suspense>
@@ -114,6 +122,7 @@ export function AppShell() {
           </nav>
         )}
       </div>
+      <Toaster />
     </>
   )
 }

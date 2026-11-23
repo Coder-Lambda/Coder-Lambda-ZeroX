@@ -45,7 +45,8 @@ export function HomeRedirect() {
 export function ModuleRoute({ module }: { module: ModuleDef }) {
   const { active } = useSession()
   if (!active?.modules[module.id]) return <Navigate to="/" replace />
-  return <ModulePlaceholder module={module} />
+  const { Page } = module
+  return Page ? <Page /> : <ModulePlaceholder module={module} />
 }
 
 /** Routes contributed by the client's extension, mounted under /set-as-wish. */

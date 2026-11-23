@@ -36,7 +36,7 @@ export function App() {
           >
             <Route index element={<HomeRedirect />} />
             {BASE_MODULES.map((module) => (
-              <Route key={module.id} path={module.path} element={<ModuleRoute module={module} />} />
+              <Route key={module.id} path={`${module.path}/*`} element={<ModuleRoute module={module} />} />
             ))}
             <Route path={`${SET_AS_WISH_PATH}/*`} element={<ExtensionRoutes />} />
             <Route path="configuracoes" element={<SettingsPage />} />
