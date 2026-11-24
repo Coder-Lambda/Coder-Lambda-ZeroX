@@ -2,11 +2,14 @@ import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { FileSpreadsheet, Plus, Search, Users } from 'lucide-react'
 import { t } from '../../../i18n/pt-BR'
-import { compareNames, formatDateTime, formatMoney, normalize } from '../../../lib/format'
+import { compareNames, formatDateTime, formatMoney, normalize, todayKey } from '../../../lib/format'
+import { useRules } from '../../../rules/useRules'
+import type { CollaboratorRules } from '../../../rules/types'
 import { PeopleList, type PersonItem } from '../PeopleList'
 import { StatTile } from '../../../ui/StatTile'
-import { collaboratorStats, useAbsences, useEmployees } from '../store'
-import type { Employee, EmployeeStatus } from '../types'
+import { countedAbsences, leaveOn, reachedAbsenceAlert } from '../rules'
+import { collaboratorStats, useAbsences, useEmployees, useLeaves } from '../store'
+import type { Absence, Employee, EmployeeLeave, EmployeeStatus } from '../types'
 import { EmployeesViewSwitch } from './EmployeesViewSwitch'
 import { StatusBadge } from './StatusBadge'
 
@@ -22,6 +25,8 @@ interface Props {
 export function EmployeesDirectory({ onAdd, onImport }: Props) {
   const employees = useEmployees()
   const absences = useAbsences()
+  const leaves = useLeaves()
+  const rules = useRules().rules.collaborators
   // Kept in the URL so coming back from an employee card restores the same view.
   const [params, setParams] = useSearchParams()
   const filter = (FILTERS.find((f) => f === params.get('situacao')) ?? 'all') as Filter
@@ -36,7 +41,8 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
     setParams(next, { replace: true })
   }
 
-  const stats = collaboratorStats(employees, absences)
+  const today = todayKey()
+  const stats = collaboratorStats(employees, absences, today, leaves)
 
   const items = useMemo<PersonItem[]>(() => {
     const q = normalize(query)
@@ -46,8 +52,8 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
     const sorted = [...visible].sort((a, b) =>
       sort === 'alpha' ? compareNames(a.name, b.name) : b.createdAt.localeCompare(a.createdAt),
     )
-    return sorted.map((e) => toItem(e, sort))
-  }, [employees, filter, sort, query])
+    return sorted.map((e) => toItem(e, sort, { absences, leaves, rules, today }))
+  }, [employees, filter, sort, query, absences, leaves, rules, today])
 
   if (employees.length === 0) {
     return (
@@ -77,11 +83,13 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
     <div className="module-body">
       <EmployeesViewSwitch current="directory" />
 
-      <div className="stat-row">
+      <div className={rules.presenceList ? 'stat-row' : 'stat-row stat-row-3'}>
         <StatTile value={stats.totalEmployees} label={t.collab.employees.stats.total} />
         <StatTile value={formatMoney(stats.totalSalary)} label={t.collab.employees.stats.payroll} />
         <StatTile value={formatMoney(stats.averageSalary)} label={t.collab.employees.stats.average} />
-        <StatTile value={`${stats.absencesToday} · ${stats.absencesMonth}`} label={t.collab.employees.stats.absences} />
+        {rules.presenceList && (
+          <StatTile value={`${stats.absencesToday} · ${stats.absencesMonth}`} label={t.collab.employees.stats.absences} />
+        )}
       </div>
 
       <div className="glass card">
@@ -135,14 +143,37 @@ export function EmployeesDirectory({ onAdd, onImport }: Props) {
   )
 }
 
-function toItem(employee: Employee, sort: Sort): PersonItem {
+interface RuleContext {
+  absences: Absence[]
+  leaves: EmployeeLeave[]
+  rules: CollaboratorRules
+  today: string
+}
+
+function toItem(employee: Employee, sort: Sort, { absences, leaves, rules, today }: RuleContext): PersonItem {
   const contact = employee.phone || employee.email
+  const onList = employee.status !== 'inactive'
+  const leave = onList ? leaveOn(leaves, employee.id, today) : undefined
+  const count = onList ? countedAbsences(absences, leaves, employee.id, today.slice(0, 7)) : 0
+  const alert = reachedAbsenceAlert(count, rules)
+  const tags = (
+    <>
+      {alert && (
+        <span className="tag tag-alert">
+          <span className="alert-ping" aria-hidden="true" />
+          {t.collab.employees.absenceTag(count)}
+        </span>
+      )}
+      {leave && <span className="tag tag-vacation">{t.collab.employees.onLeaveTag}</span>}
+      {employee.status !== 'active' && <StatusBadge status={employee.status} />}
+    </>
+  )
   return {
     id: employee.id,
     name: employee.name,
     to: `/colaboradores/funcionarios/${employee.id}`,
     removed: employee.status === 'inactive',
     sub: sort === 'date' ? t.collab.employees.addedOn(formatDateTime(employee.createdAt)) : contact || undefined,
-    aside: employee.status !== 'active' ? <StatusBadge status={employee.status} /> : undefined,
+    aside: alert || leave || employee.status !== 'active' ? tags : undefined,
   }
 }

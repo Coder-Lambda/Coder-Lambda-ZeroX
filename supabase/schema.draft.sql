@@ -15,7 +15,7 @@ create table client_configs (
   tenant_id        text not null,
   business_id      text not null,
   owner_account_id text not null references accounts (id),
-  config           jsonb not null,        -- ClientConfig (theme, businessType, modules, layout, labels…)
+  config           jsonb not null,        -- ClientConfig (theme, businessType, modules, layout, labels, rules = Livro de regras)
   created_at       timestamptz not null default now()
 );
 
@@ -25,3 +25,7 @@ create index client_configs_tenant_owner on client_configs (tenant_id, owner_acc
 --   id, tenant_id, business_id, …
 -- RLS (later): alter table … enable row level security;
 --              create policy tenant_isolation on … using (tenant_id = current_setting('app.tenant_id'));
+
+-- Rows the Livro de regras (config.rules) acts on, in the same shape:
+--   employee_leaves    (id, tenant_id, business_id, employee_id, type_id, type_name, start, "end", note, created_at)
+--   production_records (id, tenant_id, business_id, employee_id, item_id, date, quantity)

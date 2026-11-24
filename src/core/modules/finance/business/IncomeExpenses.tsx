@@ -1,4 +1,5 @@
-import { CircleCheck, HandCoins, Package, Plus, Receipt, Users } from 'lucide-react'
+import { useState } from 'react'
+import { BellRing, ChevronDown, CircleCheck, HandCoins, Package, Plus, Receipt, Users } from 'lucide-react'
 import { t } from '../../../i18n/pt-BR'
 import { compareNames, formatDateKey, formatMoney, normalize } from '../../../lib/format'
 import { monthLabel } from '../../../lib/month'
@@ -9,17 +10,39 @@ import { useStock } from '../../stock/store'
 import { useFinanceContext } from '../FinanceContext'
 import { categoryTotals } from '../store'
 import type { FinCategory, FinEntry } from '../types'
+import { useRules } from '../../../rules/useRules'
+import { moneyAlarmFired } from '../alarms'
+import { payroll, type PayrollRules } from './payroll'
 import { businessSummary, stockPurchases } from './summary'
+import { usePayrollRules } from './usePayrollRules'
 
 /** Parts 2 and 3 on one screen: income/expense labels and the money that came in and went out. */
 export function IncomeExpenses() {
   const { data, month, today } = useFinanceContext()
   const employees = useEmployees()
   const stock = useStock()
-  const summary = businessSummary(data, month, today, employees, stock.moves)
+  const payrollRules = usePayrollRules()
+  const summary = businessSummary(data, month, today, employees, stock.moves, payrollRules)
+  const { moneyAlarms } = useRules().rules.businessFinance
+  const figures = { balance: summary.balance, revenue: summary.revenue, expenses: summary.expenses, result: summary.result }
+  const fired = moneyAlarms.filter((a) => moneyAlarmFired(a, figures))
 
   return (
     <div className="module-body">
+      {fired.length > 0 && (
+        <div className="biz-alarms" role="status" aria-label={t.business.flows.alarmsTitle}>
+          {fired.map((alarm) => (
+            <p key={alarm.id} className="biz-alarm glass">
+              <BellRing aria-hidden="true" />
+              {t.business.flows.alarm(
+                alarm.name,
+                t.rules.businessFinance.moneyAlarms.metrics[alarm.metric],
+                formatMoney(figures[alarm.metric]),
+              )}
+            </p>
+          ))}
+        </div>
+      )}
       <div className="stat-row">
         <StatTile value={formatMoney(summary.revenue)} label={t.business.flows.stats.revenue} />
         <StatTile value={formatMoney(summary.expenses)} label={t.business.flows.stats.expenses} />
@@ -43,7 +66,7 @@ export function IncomeExpenses() {
 
         <section className="biz-column" aria-label={t.business.flows.expensesTitle}>
           <ColumnHead title={t.business.flows.expensesTitle} total={summary.expenses} />
-          <PayrollCard expected={summary.payrollExpected} paid={summary.payrollPaid} employees={summary.employees} />
+          <PayrollCard rules={payrollRules} expected={summary.payrollExpected} paid={summary.payrollPaid} employees={summary.employees} />
           <StockCard stock={stock} />
           <div className="glass card">
             <h3 className="biz-card-title">
@@ -155,11 +178,30 @@ function EntryRow({ entry }: { entry: FinEntry }) {
   )
 }
 
-/** Employees cost: the payroll from Colaboradores, and what was actually paid for this month. */
-function PayrollCard({ expected, paid, employees }: { expected: number; paid: number; employees: number }) {
+/**
+ * Employees cost: the payroll from Colaboradores with the rule book applied (special values, absence discount),
+ * and what was actually paid for this month.
+ */
+function PayrollCard({
+  rules,
+  expected,
+  paid,
+  employees,
+}: {
+  rules: PayrollRules
+  expected: number
+  paid: number
+  employees: number
+}) {
   const { data, month, open } = useFinanceContext()
+  const staff = useEmployees()
+  const [details, setDetails] = useState(false)
+  const sheet = payroll(staff, month, rules)
   const payments = data.entries.filter((e) => e.source === 'payroll' && e.sourceRef === month)
   const remaining = Math.max(0, Math.round((expected - paid) * 100) / 100)
+  const adjusted = sheet.additions > 0 || sheet.discounts > 0 || sheet.absenceDiscount > 0
+  const absenceDays = sheet.rows.reduce((s, r) => s + (r.absenceDiscount > 0 ? r.absences : 0), 0)
+  const copy = t.business.flows.payroll
 
   return (
     <div className="glass card">
@@ -183,6 +225,60 @@ function PayrollCard({ expected, paid, employees }: { expected: number; paid: nu
               <span className="biz-figure-label">{t.business.flows.payroll.paid}</span>
             </div>
           </div>
+          {adjusted && (
+            <div className="biz-breakdown">
+              <dl className="biz-lines">
+                <div>
+                  <dt>{copy.salaries}</dt>
+                  <dd className="num">{formatMoney(sheet.salaries)}</dd>
+                </div>
+                {sheet.additions > 0 && (
+                  <div>
+                    <dt>{copy.additions}</dt>
+                    <dd className="num">+ {formatMoney(sheet.additions)}</dd>
+                  </div>
+                )}
+                {sheet.discounts > 0 && (
+                  <div>
+                    <dt>{copy.discounts}</dt>
+                    <dd className="num">− {formatMoney(sheet.discounts)}</dd>
+                  </div>
+                )}
+                {sheet.absenceDiscount > 0 && (
+                  <div>
+                    <dt>{copy.absences(absenceDays)}</dt>
+                    <dd className="num">− {formatMoney(sheet.absenceDiscount)}</dd>
+                  </div>
+                )}
+              </dl>
+              <button type="button" className="btn btn-ghost tactile" aria-expanded={details} onClick={() => setDetails(!details)}>
+                <ChevronDown className={details ? 'rotate-180' : undefined} />
+                {details ? copy.hideBreakdown : copy.showBreakdown}
+              </button>
+              {details && (
+                <ul className="people-list">
+                  {sheet.rows.map((row) => (
+                    <li key={row.employee.id} className="biz-row well">
+                      <span className="person-main">
+                        <span className="person-name">{row.employee.name}</span>
+                        <span className="person-sub num">
+                          {[
+                            `${t.collab.widgets.salary}: ${formatMoney(row.salary)}`,
+                            ...row.applied.map((a) => `${a.rule.name}: ${a.rule.kind === 'add' ? '+' : '−'} ${formatMoney(a.amount)}`),
+                            row.absenceDiscount > 0 ? `${copy.absences(row.absences)}: − ${formatMoney(row.absenceDiscount)}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                      </span>
+                      <span className="num biz-row-amount">{formatMoney(row.total)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-2 text-[12.5px]">{copy.rulesNote}</p>
+            </div>
+          )}
           {payments.length > 0 && (
             <ul className="people-list">
               {payments.map((entry) => (

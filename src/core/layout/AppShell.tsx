@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { PanelLeftClose, PanelLeftOpen, Settings, WandSparkles, type LucideIcon } from 'lucide-react'
 import { useSession } from '../auth/SessionProvider'
@@ -10,6 +10,9 @@ import { BASE_MODULES, SET_AS_WISH_PATH } from '../modules/registry'
 import { Blobs } from '../ui/Blobs'
 import { Logo } from '../ui/Logo'
 import { Toaster } from '../ui/Toaster'
+
+// Reads every module's tables to evaluate the rule book, so it loads on its own chunk.
+const AlertBell = lazy(() => import('../rules/AlertBell'))
 
 interface NavEntry {
   to: string
@@ -81,6 +84,9 @@ export function AppShell() {
               <strong>{active.businessType}</strong>
               <span>{active.userName}</span>
             </div>
+            <Suspense fallback={null}>
+              <AlertBell variant="side" />
+            </Suspense>
             <SideItem entry={{ to: '/configuracoes', label: t.shell.settings, icon: Settings }} />
             <button
               type="button"
@@ -96,13 +102,18 @@ export function AppShell() {
 
         <header className="topbar glass">
           <Logo />
-          <NavLink
-            to="/configuracoes"
-            className="btn btn-icon btn-secondary tactile"
-            aria-label={t.shell.settings}
-          >
-            <Settings />
-          </NavLink>
+          <div className="topbar-actions">
+            <Suspense fallback={null}>
+              <AlertBell variant="top" />
+            </Suspense>
+            <NavLink
+              to="/configuracoes"
+              className="btn btn-icon btn-secondary tactile"
+              aria-label={t.shell.settings}
+            >
+              <Settings />
+            </NavLink>
+          </div>
         </header>
 
         <main id="conteudo" ref={contentRef} className="app-content" tabIndex={-1}>

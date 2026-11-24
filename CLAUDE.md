@@ -17,7 +17,8 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 - **The base never imports from `src/extensions`.** Vite aliases `@client-extension` to the current client's
   extension (or `src/core/extensions/empty.ts`), loaded lazily. ESLint rule `zerox/base-boundary` enforces this.
 - **Client registry** = `clients/<clientId>.json` (clientId, name, theme, enabledModules, hostingUrl,
-  supabaseProjectRef, baseVersion, notes). No secrets in the repo.
+  supabaseProjectRef, baseVersion, notes, optional `defaultRules` = the niche's preset rule book). No secrets in the repo.
+  `clients/dahjon.json` carries Dahjon's rules (presence list, absence = salary ÷ 30, alert at 3, atestado).
 - **Per-client build/deploy**: `VITE_CLIENT_ID` picks the client. Add `dev:<id>` / `build:<id>` scripts per client;
   each builds to `dist/<id>` and deploys on its own.
 - **Data isolation**: every table/row carries `tenant_id` (and `business_id`). See `supabase/schema.draft.sql`.
@@ -33,8 +34,8 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 
 ## Build order (one prompt each)
 
-&onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& (done) → &rulesandactions& →
-&widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
+&onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& (done) →
+&rulesandactions& (done) → &widgets& → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
 `src/core/modules/registry.ts`, the others show their placeholder shell.
 
 - Collaborators (`src/core/modules/collaborators/`): employees (sheet import, filters, card with 7 widgets,
@@ -51,6 +52,20 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 - Stock (`src/core/modules/stock/`): products + moves (in / out / adjust). Quantity = initialQuantity + moves;
   editing a quantity records an adjustment so history and charts stay true. `stockSummary()` is what &maindashboard&
   reads. Extra navbar tabs a client orders come from its extension's `moduleTabs.stock` (see `src/extensions/demo`).
+- Livro de regras (`src/core/rules/`, page `/configuracoes/regras`, linked from Configurações): one chapter per
+  module chosen in the onboarding. Stored as `ClientConfig.rules`; always read it with `readRules()` / `useRules()`
+  (base defaults ← client `defaultRules` ← what the business wrote) and write it with `useChapter()`'s `update`,
+  which builds on the latest saved config. Rules are data; the modules act on them:
+  - Colaboradores: presence list on/off, absence value (fixed or salary ÷ 30), red ping at X absences in the month,
+    special situations (`employee_leaves`; days inside one are not absences), production (`production_records`,
+    view Funcionários › Produção, meta/teto per day/month/year). Pure logic in `collaborators/rules.ts` and
+    `collaborators/production/production.ts` (`productionStats()` is for &maindashboard&).
+  - Finanças pessoais: bill/income alarms (`finance/alarms.ts`). Finanças da empresa: special pay values and the
+    absence discount go into the payroll (`finance/business/payroll.ts`), money alarms show as banners.
+  - Estoque: own units (product.unit is a string), unit value (`stockSummary().stockValue`), extra labels (`product.extra`).
+  - Dashboards: 1–9 / 1–12 places, each a widget or a chart (`rules.dashboard.slots`, `rules.mainDashboard.slots`).
+  - Avisos (`rules/useAlerts.ts`, bell in the shell, lazy chunk): everything the rules are warning about now.
+- Layout breakpoints that depend on room for content use `@container app-content`, not the window width.
 - Shared building blocks live in `src/core/ui` (MonthSwitch, StatTile, TextInput, Dialog, charts…) and
   `src/core/styles/ui.css` (module navbar, lists, month switch). Module CSS files only hold module-specific rules,
   because they load lazily with their module.

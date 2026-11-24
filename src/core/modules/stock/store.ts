@@ -49,7 +49,14 @@ export function stockSummary(data: StockData, month: string) {
     outOfStock: data.products.filter((p) => (qty.get(p.id) ?? 0) <= 0).length,
     receivedCount: inMonth.filter((m) => m.type === 'in').length,
     sentCount: inMonth.filter((m) => m.type === 'out').length,
+    /** What the stock on hand is worth, from the unit values (rule book › Valor dos itens). */
+    stockValue: stockValue(data, qty),
   }
+}
+
+export function stockValue(data: StockData, qty = quantities(data)) {
+  const total = data.products.reduce((sum, p) => sum + Math.max(0, qty.get(p.id) ?? 0) * (p.unitPrice ?? 0), 0)
+  return Math.round(total * 100) / 100
 }
 
 /** Received and sent per day of a month, for one product or all of them (adjustments excluded). */

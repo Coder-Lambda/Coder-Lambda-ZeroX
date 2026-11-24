@@ -1,0 +1,26 @@
+{
+  "clientId": "dahjon",
+  "name": "Dahjon",
+  "theme": "dolphin",
+  "enabledModules": [
+    "dashboard",
+    "collaborators",
+    "personalFinance",
+    "stock",
+    "businessFinance",
+    "mainDashboard",
+    "setAsWish"
+  ],
+  "hostingUrl": "",
+  "supabaseProjectRef": "",
+  "baseVersion": "0.1.0",
+  "notes": "Cliente original (app de um arquivo, tag dahjon-v1.0 em Coder-Lambda/DhajonWebv1). O site ao vivo dhajon.pages.dev continua sendo o app antigo. defaultRules traz as regras do Dahjon: lista de presença, desconto de 1 dia de salário (salário ÷ 30) por falta, alerta com 3 faltas no mês e atestado médico como situação especial que suspende o desconto.",
+  "defaultRules": {
+    "collaborators": {
+      "presenceList": true,
+      "absenceCharge": "salaryDay",
+      "absenceAlert": 3,
+      "leaveTypes": [{ "id": "lvt_atestado", "name": "Atestado médico", "days": null }]
+    }
+  }
+}

@@ -4,17 +4,18 @@ import { CircleAlert, Trash2 } from 'lucide-react'
 import { newId } from '../../data/localDb'
 import { useScope } from '../../data/useTable'
 import { t } from '../../i18n/pt-BR'
-import { parseDecimal } from '../../lib/format'
+import { moneyInputValue, parseDecimal, parseMoney } from '../../lib/format'
+import { useRules } from '../../rules/useRules'
 import { haptic } from '../../lib/haptic'
 import { ConfirmDialog } from '../../ui/Dialog'
 import { TextInput } from '../../ui/TextInput'
 import { toast } from '../../ui/Toaster'
-import { qtyInputValue } from './format'
+import { qtyInputValue, unitOptions } from './format'
 import { useStockContext } from './StockContext'
 import { adjustQuantity, deleteProduct, findProduct, saveProduct } from './store'
-import { UNITS, type StockProduct, type Unit } from './types'
+import type { StockProduct } from './types'
 
-type Problem = 'name' | 'taken' | 'quantity' | null
+type Problem = 'name' | 'taken' | 'quantity' | 'price' | null
 
 export function ProductForm({ product, onDone }: { product?: StockProduct; onDone: () => void }) {
   const { data, qty, today } = useStockContext()
@@ -23,7 +24,11 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
   const current = product ? (qty.get(product.id) ?? 0) : 0
   const [name, setName] = useState(product?.name ?? '')
   const [code, setCode] = useState(product?.code ?? '')
-  const [unit, setUnit] = useState<Unit>(product?.unit ?? 'un')
+  const rules = useRules().rules.stock
+  const [unit, setUnit] = useState<string>(product?.unit ?? 'un')
+  const [price, setPrice] = useState(moneyInputValue(product?.unitPrice))
+  const [extra, setExtra] = useState<Record<string, string>>(product?.extra ?? {})
+  const units = unitOptions(rules.units, product?.unit)
   const [quantity, setQuantity] = useState(qtyInputValue(current))
   const [min, setMin] = useState(qtyInputValue(product?.minQuantity))
   const [problem, setProblem] = useState<Problem>(null)
@@ -34,13 +39,16 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
     event.preventDefault()
     const target = quantity.trim() === '' ? 0 : parseDecimal(quantity, 3)
     const clash = findProduct(data.products, name)
+    const unitPrice = price.trim() === '' ? null : parseMoney(price)
     const found: Problem = !name.trim()
       ? 'name'
       : clash && clash.id !== product?.id
         ? 'taken'
         : target == null || target < 0
           ? 'quantity'
-          : null
+          : rules.itemValue && price.trim() !== '' && (unitPrice == null || unitPrice < 0)
+            ? 'price'
+            : null
     if (found) {
       setProblem(found)
       haptic('error')
@@ -51,6 +59,9 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
       code: code.trim(),
       unit,
       minQuantity: min.trim() === '' ? null : parseDecimal(min, 3),
+      // Values of rules the book turned off later are kept, not erased.
+      unitPrice: rules.itemValue ? unitPrice : (product?.unitPrice ?? null),
+      extra: Object.fromEntries(Object.entries(extra).filter(([, v]) => v.trim() !== '').map(([k, v]) => [k, v.trim()])),
     }
     if (product) {
       saveProduct({ ...product, ...fields })
@@ -71,7 +82,9 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
         ? t.stock.product.nameTaken
         : problem === 'quantity'
           ? t.stock.product.quantityInvalid
-          : null
+          : problem === 'price'
+            ? t.rules.valueInvalid
+            : null
 
   return (
     <form className="form-grid" onSubmit={submit} noValidate>
@@ -95,12 +108,31 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
         <label className="field-label" htmlFor="product-unit">
           {t.stock.product.unit}
         </label>
-        <select id="product-unit" className="input select" value={unit} onChange={(e) => setUnit(e.target.value as Unit)}>
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {t.stock.units[u]}
-            </option>
-          ))}
+        <select id="product-unit" className="input select" value={unit} onChange={(e) => setUnit(e.target.value)}>
+          {units.own.length > 0 ? (
+            <>
+              <optgroup label={t.stock.product.customUnits}>
+                {units.own.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label={t.stock.product.standardUnits}>
+                {units.standard.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          ) : (
+            units.standard.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))
+          )}
         </select>
       </div>
       <div>
@@ -120,6 +152,32 @@ export function ProductForm({ product, onDone }: { product?: StockProduct; onDon
         {product && <p className="text-2 mt-1 text-[12.5px]">{t.stock.product.quantityHint}</p>}
       </div>
       <TextInput id="product-min" label={t.stock.product.minQuantity} value={min} onChange={setMin} inputMode="decimal" />
+      {rules.itemValue && (
+        <TextInput
+          id="product-price"
+          label={t.stock.product.unitPrice}
+          value={price}
+          onChange={(v) => {
+            setPrice(v)
+            setProblem(null)
+          }}
+          inputMode="decimal"
+          prefix="R$"
+          invalid={problem === 'price'}
+          describedBy="product-error"
+        />
+      )}
+      {rules.fields.map((field) => (
+        <TextInput
+          key={field.id}
+          id={`product-extra-${field.id}`}
+          label={field.name}
+          type={field.type === 'date' ? 'date' : 'text'}
+          inputMode={field.type === 'number' ? 'decimal' : undefined}
+          value={extra[field.id] ?? ''}
+          onChange={(v) => setExtra((cur) => ({ ...cur, [field.id]: v }))}
+        />
+      ))}
       <p id="product-error" className="field-error span-2" role="alert">
         {message && (
           <>

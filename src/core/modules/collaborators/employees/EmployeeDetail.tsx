@@ -10,10 +10,15 @@ import { Avatar } from '../../../ui/Avatar'
 import { ConfirmDialog, Dialog } from '../../../ui/Dialog'
 import { toast } from '../../../ui/Toaster'
 import { Toggle } from '../../../ui/Toggle'
-import { TABLES, absencesFor, attachFile, save, useAbsences, useEmployees, useFiles, useNotes } from '../store'
+import { useRules } from '../../../rules/useRules'
+import type { CollaboratorRules } from '../../../rules/types'
+import { ProductionCard } from '../production/ProductionCard'
+import { absenceDeduction, countedAbsences, reachedAbsenceAlert } from '../rules'
+import { TABLES, absencesFor, attachFile, save, useAbsences, useEmployees, useFiles, useLeaves, useNotes } from '../store'
 import { EMPLOYEE_WIDGETS, type Employee, type EmployeeWidget } from '../types'
 import { EmployeeForm, type EmployeeField } from './EmployeeForm'
 import { FilesSection, MAX_FILE_BYTES } from './FilesSection'
+import { LeavesSection } from './LeavesSection'
 import { NotesSection } from './NotesSection'
 import { StatusBadge } from './StatusBadge'
 
@@ -47,7 +52,13 @@ function EmployeeCard({ employee }: { employee: Employee }) {
   const { active, updateActive } = useSession()
   const scope = useScope()
   const navigate = useNavigate()
-  const absences = absencesFor(useAbsences(), employee.id)
+  const allAbsences = useAbsences()
+  const leaves = useLeaves()
+  const rules = useRules().rules.collaborators
+  const month = todayKey().slice(0, 7)
+  // On the card, a day inside a special situation is not an absence (rule book).
+  const absences = { ...absencesFor(allAbsences, employee.id, month), month: countedAbsences(allAbsences, leaves, employee.id, month) }
+  const employeeLeaves = leaves.filter((l) => l.employee_id === employee.id)
   const notes = useNotes().filter((n) => n.employee_id === employee.id)
   const files = useFiles().filter((f) => f.employee_id === employee.id)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -58,7 +69,9 @@ function EmployeeCard({ employee }: { employee: Employee }) {
   const [exporting, setExporting] = useState(false)
 
   const removed = employee.status === 'inactive'
-  const widgets = readWidgets(active?.layout.employeeWidgets)
+  // Without the presence list (rule book) there are no absences to show.
+  const widgets = readWidgets(active?.layout.employeeWidgets).filter((w) => w !== 'absences' || rules.presenceList)
+  const widgetOptions = EMPLOYEE_WIDGETS.filter((w) => w !== 'absences' || rules.presenceList)
 
   const setWidgets = (next: EmployeeWidget[]) =>
     active && updateActive({ layout: { ...active.layout, employeeWidgets: next } })
@@ -171,6 +184,7 @@ function EmployeeCard({ employee }: { employee: Employee }) {
               widget={widget}
               employee={employee}
               absences={absences}
+              rules={rules}
               onOpen={() =>
                 widget === 'absences' ? navigate('/colaboradores/funcionarios/presenca') : setEditing(widget)
               }
@@ -178,6 +192,12 @@ function EmployeeCard({ employee }: { employee: Employee }) {
           ))}
         </div>
       </section>
+
+      {rules.production && rules.productionItems.length > 0 && <ProductionCard employee={employee} />}
+
+      {(rules.leaveTypes.length > 0 || employeeLeaves.length > 0) && (
+        <LeavesSection employee={employee} leaves={employeeLeaves} />
+      )}
 
       <div className="card-grid">
         <NotesSection employeeId={employee.id} notes={notes} />
@@ -204,7 +224,7 @@ function EmployeeCard({ employee }: { employee: Employee }) {
       <Dialog open={customizing} onClose={() => setCustomizing(false)} title={t.collab.card.customizeTitle}>
         <p className="text-2 mb-4">{t.collab.card.customizeSub}</p>
         <ul className="toggle-list">
-          {EMPLOYEE_WIDGETS.map((widget) => {
+          {widgetOptions.map((widget) => {
             const shown = widgets.includes(widget)
             return (
               <li key={widget} className="well toggle-list-row">
@@ -239,22 +259,27 @@ interface WidgetTileProps {
   widget: EmployeeWidget
   employee: Employee
   absences: { month: number; total: number }
+  rules: CollaboratorRules
   onOpen: () => void
 }
 
-function WidgetTile({ widget, employee, absences, onOpen }: WidgetTileProps) {
+function WidgetTile({ widget, employee, absences, rules, onOpen }: WidgetTileProps) {
   const label = t.collab.widgets[widget]
   let value: string | null
   let sub: string | null = null
+  let alert = false
 
   switch (widget) {
     case 'birthday':
       value = employee.birthday ? formatDateKey(employee.birthday, false) : null
       sub = employee.birthday ? t.collab.card.age(ageOn(employee.birthday)) : null
       break
-    case 'salary':
+    case 'salary': {
       value = employee.salary == null ? null : formatMoney(employee.salary)
+      const discount = absenceDeduction(employee, absences.month, rules)
+      sub = discount > 0 ? t.collab.card.absenceDiscount(formatMoney(discount)) : null
       break
+    }
     case 'registered':
       value =
         employee.registered == null
@@ -266,14 +291,18 @@ function WidgetTile({ widget, employee, absences, onOpen }: WidgetTileProps) {
     case 'absences':
       value = String(absences.month)
       sub = `${t.collab.card.absencesMonth} · ${t.collab.card.absencesTotal(absences.total)}`
+      alert = reachedAbsenceAlert(absences.month, rules)
       break
     default:
       value = employee[widget] || null
   }
 
   return (
-    <button type="button" className={`widget-tile glass tactile widget-${widget}`} onClick={onOpen}>
-      <span className="widget-label">{label}</span>
+    <button type="button" className={`widget-tile glass tactile widget-${widget}${alert ? ' is-alert' : ''}`} onClick={onOpen}>
+      <span className="widget-label">
+        {label}
+        {alert && <span className="alert-ping" aria-hidden="true" />}
+      </span>
       <span className={`widget-value num${value ? '' : ' is-empty'}`}>{value ?? t.common.notInformed}</span>
       {sub && <span className="widget-sub">{sub}</span>}
     </button>

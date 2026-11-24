@@ -1,0 +1,237 @@
+@layer components {
+  .rule-storage {
+    margin-bottom: 14px;
+  }
+
+  /* Chapter index: one chip per module chosen in the onboarding. */
+  .rule-index {
+    margin-bottom: 14px;
+  }
+  .rule-index .chip {
+    text-decoration: none;
+  }
+  .rule-index .chip .num {
+    color: var(--accent-glow);
+    font-weight: 600;
+  }
+
+  .rule-book {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .rule-chapter {
+    scroll-margin-top: 16px;
+  }
+  .rule-chapter-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .rule-chapter-icon {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-ctl);
+    background: color-mix(in oklab, var(--accent-glow) 16%, transparent);
+    color: var(--accent-glow);
+  }
+  .rule-chapter-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .rule-chapter-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-glow);
+  }
+  .rule-chapter-title {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .rule-chapter-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* One rule: text on the left, its control on the right. */
+  .rule-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 14px 14px 18px;
+    transition: opacity var(--dur-base) var(--ease-smooth);
+  }
+  .rule-row.is-disabled {
+    opacity: 0.6;
+  }
+  .rule-row-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .rule-row-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .rule-title {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .rule-hint {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .rule-row-control {
+    flex-shrink: 0;
+  }
+  .rule-row-below {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rule-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+  }
+  .rule-segmented {
+    width: min(100%, 460px);
+  }
+
+  .rule-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rule-number .input-prefix {
+    width: 132px;
+  }
+  .rule-number .input-prefix:not(:has(> span)) .input {
+    padding-left: 14px;
+  }
+  .rule-number-suffix {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .rule-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rule-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-row);
+    background: color-mix(in oklab, var(--text) 4%, transparent);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .rule-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .rule-suggestions .chip {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .rule-note {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .rule-note svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--accent-glow);
+  }
+
+  .rule-target-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* Dashboard places: tap one to exchange widget ↔ chart. */
+  .rule-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rule-stepper-value {
+    min-width: 76px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .rule-slots {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .rule-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 68px;
+    padding: 8px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-row);
+    background: transparent;
+    color: var(--text-2);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .rule-slot svg {
+    width: 18px;
+    height: 18px;
+  }
+  .rule-slot.is-chart {
+    grid-column: span 2;
+    border-style: solid;
+    border-color: transparent;
+    background: color-mix(in oklab, var(--accent-glow) 16%, transparent);
+    color: var(--accent-glow);
+  }
+
+  @media (max-width: 760px) {
+    .rule-row {
+      padding: 14px;
+    }
+    .rule-row-main {
+      flex-wrap: wrap;
+    }
+    .rule-target-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .rule-slots {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}

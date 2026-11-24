@@ -8,12 +8,16 @@ import { haptic } from '../../../lib/haptic'
 import { Avatar } from '../../../ui/Avatar'
 import { MonthCalendar } from '../../../ui/MonthCalendar'
 import { StatTile } from '../../../ui/StatTile'
-import { setAbsent, useAbsences, useEmployees, wasOnList } from '../store'
+import { useRules } from '../../../rules/useRules'
+import { countedAbsences, leaveOn, reachedAbsenceAlert } from '../rules'
+import { setAbsent, useAbsences, useEmployees, useLeaves, wasOnList } from '../store'
 import { EmployeesViewSwitch } from './EmployeesViewSwitch'
 
 export function PresenceList() {
   const employees = useEmployees()
   const absences = useAbsences()
+  const leaves = useLeaves()
+  const rules = useRules().rules.collaborators
   const scope = useScope()
   const today = todayKey()
   const [selected, setSelected] = useState(today)
@@ -44,7 +48,9 @@ export function PresenceList() {
     return counts
   }, [absences])
 
-  const monthAbsences = absences.filter((a) => a.date.startsWith(selected.slice(0, 7))).length
+  const selectedMonth = selected.slice(0, 7)
+  // A day inside a special situation (rule book) is not an absence.
+  const monthAbsences = absences.filter((a) => a.date.startsWith(selectedMonth) && !leaveOn(leaves, a.employee_id, a.date)).length
 
   const toggle = (employeeId: string, absent: boolean) => {
     haptic(absent ? 'rigid' : 'soft')
@@ -100,15 +106,29 @@ export function PresenceList() {
           ) : (
             <ul className="people-list">
               {roster.map((employee) => {
-                const absent = absentToday.has(employee.id)
+                const leave = leaveOn(leaves, employee.id, selected)
+                const absent = !leave && absentToday.has(employee.id)
                 const onVacation = employee.status === 'vacation' && selected === today
+                const count = countedAbsences(absences, leaves, employee.id, selectedMonth)
+                const alert = reachedAbsenceAlert(count, rules)
                 return (
-                  <li key={employee.id} className={`presence-row well${absent ? ' is-absent' : ''}`}>
+                  <li key={employee.id} className={`presence-row well${absent ? ' is-absent' : ''}${alert ? ' is-alert' : ''}`}>
                     <Avatar name={employee.name} size={36} />
                     <Link to={`/colaboradores/funcionarios/${employee.id}`} className="person-name presence-name">
                       {employee.name}
                     </Link>
-                    {onVacation ? (
+                    {alert && (
+                      <span className="tag tag-alert" title={t.collab.presence.alertAria(employee.name, count)}>
+                        <span className="alert-ping" aria-hidden="true" />
+                        <span className="sr-only">{t.collab.presence.alertAria(employee.name, count)}</span>
+                        <span aria-hidden="true" className="num">
+                          {count}
+                        </span>
+                      </span>
+                    )}
+                    {leave ? (
+                      <span className="tag tag-vacation">{leave.typeName}</span>
+                    ) : onVacation ? (
                       <span className="tag tag-vacation">{t.collab.presence.onVacation}</span>
                     ) : (
                       <button

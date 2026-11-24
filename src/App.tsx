@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { SessionProvider, useSession } from './core/auth/SessionProvider'
 import { SignInPage } from './core/auth/SignInPage'
@@ -7,6 +7,8 @@ import { ExtensionRoutes, HomeRedirect, ModuleRoute, OnboardingRoute, RequireBus
 import { BASE_MODULES, SET_AS_WISH_PATH } from './core/modules/registry'
 import { SettingsPage } from './core/settings/SettingsPage'
 import { applyTheme } from './core/theme/applyTheme'
+
+const RuleBookPage = lazy(() => import('./core/rules/RuleBookPage'))
 
 /** Outside the onboarding, the theme always follows the active business (mono when signed out). */
 function ThemeSync() {
@@ -40,6 +42,7 @@ export function App() {
             ))}
             <Route path={`${SET_AS_WISH_PATH}/*`} element={<ExtensionRoutes />} />
             <Route path="configuracoes" element={<SettingsPage />} />
+            <Route path="configuracoes/regras" element={<RuleBookPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

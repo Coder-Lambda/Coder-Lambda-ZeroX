@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, LineChart as LineIcon, Package, PackageMinus, PackagePlus, Pencil, Table2 } from 'lucide-react'
 import { t } from '../../i18n/pt-BR'
-import { formatDateKey } from '../../lib/format'
+import { formatDateKey, formatMoney } from '../../lib/format'
+import { useRules } from '../../rules/useRules'
 import { ChartTable } from '../../ui/charts/ChartTable'
 import { LineChart } from '../../ui/charts/LineChart'
 import { StatTile } from '../../ui/StatTile'
-import { formatQty } from './format'
+import { formatExtra, formatQty } from './format'
 import { MoveRow } from './MoveRow'
 import { useStockContext } from './StockContext'
 import { isLow, lastDays, levelSeries } from './store'
@@ -30,6 +31,7 @@ export function ProductDetail() {
 
 function ProductCard({ product }: { product: StockProduct }) {
   const { data, qty, today, open } = useStockContext()
+  const rules = useRules().rules.stock
   const [asTable, setAsTable] = useState(false)
   const amount = qty.get(product.id) ?? 0
   const month = today.slice(0, 7)
@@ -57,6 +59,22 @@ function ProductCard({ product }: { product: StockProduct }) {
               isLow(product, amount) && <span className="tag tag-warning">{t.stock.general.lowTag}</span>
             )}
           </div>
+          {rules.itemValue && product.unitPrice != null && (
+            <p className="text-2 num text-[13px]">
+              {t.stock.product.priceLabel(formatMoney(product.unitPrice), formatMoney(Math.max(0, amount) * product.unitPrice))}
+            </p>
+          )}
+          {rules.fields.some((f) => product.extra?.[f.id]) && (
+            <div className="flex flex-wrap gap-2" aria-label={t.stock.product.extraTitle}>
+              {rules.fields
+                .filter((f) => product.extra?.[f.id])
+                .map((f) => (
+                  <span key={f.id} className="tag">
+                    {f.name}: {formatExtra(f, product.extra?.[f.id] ?? '')}
+                  </span>
+                ))}
+            </div>
+          )}
         </div>
         <div className="employee-actions stock-head-actions">
           <button type="button" className="btn btn-secondary tactile" onClick={() => open({ type: 'product', product })}>

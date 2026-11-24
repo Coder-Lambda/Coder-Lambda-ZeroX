@@ -9,7 +9,9 @@
     "lint": "tsc -b && eslint .",
     "preview": "vite preview",
     "dev:demo": "cross-env VITE_CLIENT_ID=demo vite",
-    "build:demo": "cross-env VITE_CLIENT_ID=demo vite build --outDir dist/demo"
+    "build:demo": "cross-env VITE_CLIENT_ID=demo vite build --outDir dist/demo",
+    "dev:dahjon": "cross-env VITE_CLIENT_ID=dahjon vite",
+    "build:dahjon": "cross-env VITE_CLIENT_ID=dahjon vite build --outDir dist/dahjon"
   },
   "dependencies": {
     "@fontsource-variable/outfit": "^5.3.0",

@@ -18,8 +18,11 @@ interface SessionValue {
   signOut: () => void
   addBusiness: (config: ClientConfig) => void
   selectBusiness: (businessId: string) => void
-  updateActive: (patch: Partial<Pick<ClientConfig, 'theme' | 'layout' | 'labels'>>) => void
+  /** A patch, or a function that builds it from the latest saved config (safe for quick successive changes). */
+  updateActive: (patch: ActivePatch | ((latest: ClientConfig) => ActivePatch)) => void
 }
+
+type ActivePatch = Partial<Pick<ClientConfig, 'theme' | 'layout' | 'labels' | 'rules'>>
 
 const SessionContext = createContext<SessionValue | null>(null)
 
@@ -93,7 +96,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const updateActive = useCallback<SessionValue['updateActive']>(
     (patch) => {
       if (!active) return
-      saveConfig({ ...active, ...patch })
+      const latest = listBusinesses(active.ownerAccountId).find((b) => b.businessId === active.businessId) ?? active
+      saveConfig({ ...latest, ...(typeof patch === 'function' ? patch(latest) : patch) })
       setBusinesses(listBusinesses(active.ownerAccountId))
     },
     [active],

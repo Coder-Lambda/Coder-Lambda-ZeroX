@@ -1,3 +1,5 @@
+import type { RuleBookPreset } from '../rules/types'
+
 export type PaletteThemeId = 'dolphin' | 'blackwidow' | 'frog' | 'wolf'
 export type ThemeId = 'mono' | PaletteThemeId
 
@@ -36,6 +38,8 @@ export interface ClientConfig {
   layout: Record<string, unknown>
   /** Per-client label overrides. */
   labels: Record<string, string>
+  /** The Livro de regras (src/core/rules). Read it with readRules(), which fills what is missing. */
+  rules?: RuleBookPreset
   createdAt: string
 }
 
@@ -50,4 +54,6 @@ export interface ClientRegistryEntry {
   supabaseProjectRef: string
   baseVersion: string
   notes: string
+  /** Rules every new business of this client starts with (its niche's usual rules). */
+  defaultRules?: RuleBookPreset
 }

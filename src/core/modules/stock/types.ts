@@ -6,11 +6,16 @@ export type Unit = (typeof UNITS)[number]
 export interface StockProduct extends BusinessRow {
   name: string
   code: string
-  unit: Unit
+  /** A standard Unit, or the abbreviation of one of the business's own units (rule book › Denominações). */
+  unit: Unit | (string & {})
   /** Counted when the product was registered. The current quantity adds every move after it. */
   initialQuantity: number
   /** Low-stock warning threshold; null = no warning. */
   minQuantity: number | null
+  /** R$ per unit, when the rule book turns item values on. */
+  unitPrice?: number | null
+  /** Extra labels from the rule book, by field id. */
+  extra?: Record<string, string>
   createdAt: string
 }
 

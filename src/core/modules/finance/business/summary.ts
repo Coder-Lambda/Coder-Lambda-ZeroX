@@ -2,6 +2,7 @@ import type { Employee } from '../../collaborators/types'
 import type { StockMove } from '../../stock/types'
 import { balanceAt, monthTotals } from '../store'
 import type { FinanceData, FinEntry } from '../types'
+import { payroll, type PayrollRules } from './payroll'
 
 const round = (value: number) => Math.round(value * 100) / 100
 const sum = (entries: FinEntry[]) => round(entries.reduce((s, e) => s + e.amount, 0))
@@ -17,16 +18,20 @@ export function stockPurchases(data: FinanceData, stockMoves: StockMove[], month
     }))
 }
 
-/** The numbers &maindashboard& reads for the business: cash in and out, payroll and stock costs. */
+/**
+ * The numbers &maindashboard& reads for the business: cash in and out, payroll and stock costs.
+ * With `payrollRules`, the expected payroll follows the rule book (special values and absence discounts).
+ */
 export function businessSummary(
   data: FinanceData,
   month: string,
   today: string,
   employees: Employee[],
   stockMoves: StockMove[],
+  payrollRules?: PayrollRules,
 ) {
   const onList = employees.filter((e) => e.status !== 'inactive')
-  const payrollExpected = round(onList.reduce((s, e) => s + (e.salary ?? 0), 0))
+  const payrollExpected = payroll(employees, month, payrollRules).total
   const payrollPaid = sum(data.entries.filter((e) => e.source === 'payroll' && e.sourceRef === month))
   const purchases = stockPurchases(data, stockMoves, month)
   const totals = monthTotals(data.entries, month)

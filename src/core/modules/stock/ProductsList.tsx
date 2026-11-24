@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Info, Package, Plus, Search } from 'lucide-react'
 import { t } from '../../i18n/pt-BR'
-import { compareNames, normalize } from '../../lib/format'
+import { compareNames, formatMoney, normalize } from '../../lib/format'
+import { useRules } from '../../rules/useRules'
 import { StatTile } from '../../ui/StatTile'
 import { formatQty } from './format'
 import { useStockContext } from './StockContext'
@@ -16,6 +17,7 @@ export function ProductsList() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const summary = stockSummary(data, today.slice(0, 7))
+  const showValue = useRules().rules.stock.itemValue
 
   const rows = useMemo(() => {
     const q = normalize(query)
@@ -49,10 +51,11 @@ export function ProductsList() {
 
   return (
     <div className="module-body">
-      <div className="stat-row stat-row-3">
+      <div className={showValue ? 'stat-row' : 'stat-row stat-row-3'}>
         <StatTile value={summary.products} label={t.stock.general.stats.products} />
         <StatTile value={summary.lowStock} label={t.stock.general.stats.low} />
         <StatTile value={summary.outOfStock} label={t.stock.general.stats.zero} />
+        {showValue && <StatTile value={formatMoney(summary.stockValue)} label={t.stock.general.stats.value} />}
       </div>
 
       <div className="glass card">

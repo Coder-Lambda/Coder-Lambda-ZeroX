@@ -25,6 +25,28 @@ export interface Absence extends BusinessRow {
   date: string
 }
 
+/** A special situation from the rule book (maternity leave, illness…): days in it are not absences. */
+export interface EmployeeLeave extends BusinessRow {
+  employee_id: string
+  /** LeaveType id in the rule book; the name is kept so the record survives the type being deleted. */
+  typeId: string
+  typeName: string
+  /** YYYY-MM-DD, both inclusive. */
+  start: string
+  end: string
+  note: string
+  createdAt: string
+}
+
+/** How much one employee made of one production item on one day. */
+export interface ProductionRecord extends BusinessRow {
+  employee_id: string
+  itemId: string
+  /** YYYY-MM-DD */
+  date: string
+  quantity: number
+}
+
 export interface EmployeeNote extends BusinessRow {
   employee_id: string
   kind: 'warning' | 'incident'

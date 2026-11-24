@@ -11,6 +11,8 @@ import { EmployeeForm } from './employees/EmployeeForm'
 import { EmployeesDirectory } from './employees/EmployeesDirectory'
 import { ImportDialog } from './employees/ImportDialog'
 import { PresenceList } from './employees/PresenceList'
+import { ProductionView } from './production/ProductionView'
+import { useRules } from '../../rules/useRules'
 import './collaborators.css'
 
 type Section = 'employees' | 'partners' | 'suppliers'
@@ -26,6 +28,8 @@ export default function CollaboratorsModule() {
   const segment = pathname.split('/')[2]
   const section = SECTIONS.find((s) => s.path === segment)?.id ?? 'employees'
   const [dialog, setDialog] = useState<Section | 'import' | null>(null)
+  const { collaborators: rules } = useRules().rules
+  const toDirectory = <Navigate to="/colaboradores/funcionarios" replace />
 
   return (
     <>
@@ -67,7 +71,8 @@ export default function CollaboratorsModule() {
       <Routes>
         <Route index element={<Navigate to="funcionarios" replace />} />
         <Route path="funcionarios" element={<EmployeesDirectory onAdd={() => setDialog('employees')} onImport={() => setDialog('import')} />} />
-        <Route path="funcionarios/presenca" element={<PresenceList />} />
+        <Route path="funcionarios/presenca" element={rules.presenceList ? <PresenceList /> : toDirectory} />
+        <Route path="funcionarios/producao" element={rules.production ? <ProductionView /> : toDirectory} />
         <Route path="funcionarios/:id" element={<EmployeeDetail />} />
         <Route path="parceiros" element={<ContactsList kind="partners" onAdd={() => setDialog('partners')} />} />
         <Route path="parceiros/:id" element={<ContactDetail kind="partners" />} />

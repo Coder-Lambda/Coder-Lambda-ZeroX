@@ -1,5 +1,5 @@
-import { Check, LogOut, Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { BookOpen, Check, ChevronRight, LogOut, Plus } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSession } from '../auth/SessionProvider'
 import { BASE_VERSION, CLIENT_ID } from '../config/clientRegistry'
 import { MODULE_IDS } from '../config/types'
@@ -15,11 +15,25 @@ export function SettingsPage() {
   const { account, active, businesses, updateActive, selectBusiness, signOut } = useSession()
   const navigate = useNavigate()
   if (!active || !account) return null
+  // One chapter of the rule book per base module chosen in the onboarding.
+  const chapters = MODULE_IDS.filter((id) => id !== 'setAsWish' && active.modules[id]).length
 
   return (
     <>
       <PageHead title={t.settings.title} sub={t.settings.sub} />
       <div className="card-grid">
+        <Link to="/configuracoes/regras" className="glass card span-12 rulebook-card tactile">
+          <span className="rulebook-card-icon" aria-hidden="true">
+            <BookOpen />
+          </span>
+          <span className="rulebook-card-main">
+            <span className="rulebook-card-title">{t.settings.rulebook}</span>
+            <span className="text-2 text-[13px]">{t.settings.rulebookSub}</span>
+          </span>
+          <span className="badge num">{t.settings.rulebookChapters(chapters)}</span>
+          <ChevronRight className="person-chevron" aria-hidden="true" />
+        </Link>
+
         <section className="glass card span-12">
           <h2 className="card-title">{t.settings.theme}</h2>
           <div className="theme-grid lg:grid-cols-4">

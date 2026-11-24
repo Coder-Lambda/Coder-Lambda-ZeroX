@@ -3,7 +3,8 @@ import { fileStore } from '../../data/fileStore'
 import { localDb, newId } from '../../data/localDb'
 import { useTable } from '../../data/useTable'
 import { todayKey } from '../../lib/format'
-import type { Absence, Employee, EmployeeFile, EmployeeNote, Partner, Supplier } from './types'
+import { leaveOn } from './rules'
+import type { Absence, Employee, EmployeeFile, EmployeeLeave, EmployeeNote, Partner, ProductionRecord, Supplier } from './types'
 
 export const TABLES = {
   employees: 'employees',
@@ -12,6 +13,8 @@ export const TABLES = {
   files: 'employee_files',
   partners: 'partners',
   suppliers: 'suppliers',
+  leaves: 'employee_leaves',
+  production: 'production_records',
 } as const
 
 export const useEmployees = () => useTable<Employee>(TABLES.employees)
@@ -20,6 +23,8 @@ export const useNotes = () => useTable<EmployeeNote>(TABLES.notes)
 export const useFiles = () => useTable<EmployeeFile>(TABLES.files)
 export const usePartners = () => useTable<Partner>(TABLES.partners)
 export const useSuppliers = () => useTable<Supplier>(TABLES.suppliers)
+export const useLeaves = () => useTable<EmployeeLeave>(TABLES.leaves)
+export const useProduction = () => useTable<ProductionRecord>(TABLES.production)
 
 export const save = <T extends { id: string; tenant_id: string }>(table: string, row: T) =>
   localDb.upsert<T>(table, row)
@@ -31,6 +36,8 @@ export function removeEmployee(employee: Employee) {
   localDb.remove<EmployeeFile>(TABLES.files, CLIENT_ID, sameEmployee)
   localDb.remove<EmployeeNote>(TABLES.notes, CLIENT_ID, sameEmployee)
   localDb.remove<Absence>(TABLES.absences, CLIENT_ID, sameEmployee)
+  localDb.remove<EmployeeLeave>(TABLES.leaves, CLIENT_ID, sameEmployee)
+  localDb.remove<ProductionRecord>(TABLES.production, CLIENT_ID, sameEmployee)
   localDb.remove<Employee>(TABLES.employees, CLIENT_ID, (row) => row.id === employee.id)
 }
 
@@ -83,18 +90,52 @@ export function absencesFor(absences: Absence[], employeeId: string, monthKey = 
   }
 }
 
-/** Numbers the main dashboard reads (&maindashboard&): only employees still on the list count. */
-export function collaboratorStats(employees: Employee[], absences: Absence[], day = todayKey()) {
+/**
+ * Numbers the main dashboard reads (&maindashboard&): only employees still on the list count, and a day
+ * inside a special situation (rule book) is not an absence.
+ */
+export function collaboratorStats(employees: Employee[], absences: Absence[], day = todayKey(), leaves: EmployeeLeave[] = []) {
   const onList = employees.filter((e) => e.status !== 'inactive')
   const salaries = onList.map((e) => e.salary).filter((s): s is number => s != null)
   const totalSalary = salaries.reduce((sum, s) => sum + s, 0)
   const onListIds = new Set(onList.map((e) => e.id))
   const monthKey = day.slice(0, 7)
+  const counts = (a: Absence) => onListIds.has(a.employee_id) && !leaveOn(leaves, a.employee_id, a.date)
   return {
     totalEmployees: onList.length,
     totalSalary,
     averageSalary: salaries.length ? totalSalary / salaries.length : null,
-    absencesToday: absences.filter((a) => a.date === day && onListIds.has(a.employee_id)).length,
-    absencesMonth: absences.filter((a) => a.date.startsWith(monthKey) && onListIds.has(a.employee_id)).length,
+    absencesToday: absences.filter((a) => a.date === day && counts(a)).length,
+    absencesMonth: absences.filter((a) => a.date.startsWith(monthKey) && counts(a)).length,
+    onLeaveToday: onList.filter((e) => leaveOn(leaves, e.id, day)).length,
   }
+}
+
+export function saveLeave(leave: EmployeeLeave) {
+  localDb.upsert<EmployeeLeave>(TABLES.leaves, leave)
+}
+
+/** Sets what an employee made of an item on a day; empty or zero removes the record. */
+export function setProduction(
+  scope: { tenant_id: string; business_id: string },
+  employeeId: string,
+  itemId: string,
+  date: string,
+  quantity: number | null,
+) {
+  const match = (row: ProductionRecord) =>
+    row.business_id === scope.business_id && row.employee_id === employeeId && row.itemId === itemId && row.date === date
+  const existing = localDb.list<ProductionRecord>(TABLES.production, CLIENT_ID, match)[0]
+  if (!quantity || quantity <= 0) {
+    if (existing) localDb.remove<ProductionRecord>(TABLES.production, CLIENT_ID, match)
+    return
+  }
+  localDb.upsert<ProductionRecord>(TABLES.production, {
+    id: existing?.id ?? newId('prod'),
+    ...scope,
+    employee_id: employeeId,
+    itemId,
+    date,
+    quantity,
+  })
 }
