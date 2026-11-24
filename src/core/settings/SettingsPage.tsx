@@ -1,4 +1,4 @@
-import { BookOpen, Check, ChevronRight, LogOut, Plus } from 'lucide-react'
+import { BookOpen, Check, ChevronRight, LayoutGrid, LogOut, Plus } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSession } from '../auth/SessionProvider'
 import { BASE_VERSION, CLIENT_ID } from '../config/clientRegistry'
@@ -22,17 +22,36 @@ export function SettingsPage() {
     <>
       <PageHead title={t.settings.title} sub={t.settings.sub} />
       <div className="card-grid">
-        <Link to="/configuracoes/regras" className="glass card span-12 rulebook-card tactile">
+        <Link to="/configuracoes/regras" className="glass card span-6 rulebook-card tactile">
           <span className="rulebook-card-icon" aria-hidden="true">
             <BookOpen />
           </span>
           <span className="rulebook-card-main">
             <span className="rulebook-card-title">{t.settings.rulebook}</span>
             <span className="text-2 text-[13px]">{t.settings.rulebookSub}</span>
+            <span className="badge num mt-1 self-start">{t.settings.rulebookChapters(chapters)}</span>
           </span>
-          <span className="badge num">{t.settings.rulebookChapters(chapters)}</span>
           <ChevronRight className="person-chevron" aria-hidden="true" />
         </Link>
+
+        <section className="glass card span-6 rulebook-card" aria-label={t.settings.widgets}>
+          <span className="rulebook-card-icon" aria-hidden="true">
+            <LayoutGrid />
+          </span>
+          <span className="rulebook-card-main">
+            <span className="rulebook-card-title">{t.settings.widgets}</span>
+            <span className="text-2 text-[13px]">{t.settings.widgetsSub}</span>
+            <span className="mt-2 flex flex-wrap gap-2">
+              <Link to="/configuracoes/widgets?criar=1" className="btn btn-primary tactile">
+                <Plus />
+                {t.settings.widgetsCreate}
+              </Link>
+              <Link to="/configuracoes/widgets" className="btn btn-secondary tactile">
+                {t.settings.widgetsOpen}
+              </Link>
+            </span>
+          </span>
+        </section>
 
         <section className="glass card span-12">
           <h2 className="card-title">{t.settings.theme}</h2>

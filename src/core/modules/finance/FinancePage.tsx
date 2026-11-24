@@ -11,6 +11,7 @@ import { CalendarWidget } from './widgets/CalendarWidget'
 import { FlowWidget } from './widgets/FlowWidget'
 import { TitlesWidget } from './widgets/TitlesWidget'
 import './finance.css'
+import { WidgetStrip } from '../../widgets/WidgetGrid'
 
 interface Props {
   book: FinanceBook
@@ -29,6 +30,9 @@ export function FinancePage({ book, title, sub }: Props) {
         sub={sub}
         aside={<MonthSwitch value={value.month} onChange={value.setMonth} currentMonth={currentMonth} />}
       />
+
+      {/* Personal finance strip; business finance shows its own above its navbar parts. */}
+      {book === 'personal' && <WidgetStrip place="personalFinance" />}
 
       <div className="fin-widgets">
         <AccountsWidget />

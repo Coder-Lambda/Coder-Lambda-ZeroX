@@ -7,8 +7,16 @@ const slots = (widgets: number, charts: number): SlotKind[] => [
   ...Array<SlotKind>(charts).fill('chart'),
 ]
 
-/** How many places each dashboard can have. */
-export const SLOT_LIMITS = { dashboard: { min: 1, max: 9 }, mainDashboard: { min: 1, max: 12 } } as const
+/**
+ * How many places each dashboard can have: the dashboard up to 9, at most 2 of them charts
+ * (7 widgets + 2 charts, or 9 widgets); the main dashboard up to 15 widgets and 6 charts.
+ */
+export const SLOT_LIMITS = {
+  dashboard: { min: 1, max: 9, maxWidgets: 9, maxCharts: 2 },
+  mainDashboard: { min: 1, max: 21, maxWidgets: 15, maxCharts: 6 },
+} as const
+
+type SlotLimit = (typeof SLOT_LIMITS)[keyof typeof SLOT_LIMITS]
 
 /**
  * The book every business starts with. The absence alert at 3 comes from Dahjon; everything else is off
@@ -27,7 +35,7 @@ export const DEFAULT_RULES: RuleBook = {
   personalFinance: { alarms: [] },
   businessFinance: { payRules: [], moneyAlarms: [] },
   stock: { units: [], itemValue: false, fields: [] },
-  dashboard: { slots: slots(6, 1) },
+  dashboard: { slots: slots(7, 2) },
   mainDashboard: { slots: slots(8, 4) },
 }
 
@@ -43,9 +51,22 @@ function merge(base: RuleBook, preset: RuleBookPreset | undefined): RuleBook {
   return next as RuleBook
 }
 
-function validSlots(rules: DashboardRules, limit: { min: number; max: number }, fallback: DashboardRules) {
+/** Keeps a saved layout inside the limits: extra charts become widgets while there is room, the rest is cut. */
+function validSlots(rules: DashboardRules, limit: SlotLimit, fallback: DashboardRules) {
   const list = Array.isArray(rules.slots) ? rules.slots.filter((s) => s === 'widget' || s === 'chart') : []
-  return list.length >= limit.min ? { slots: list.slice(0, limit.max) } : fallback
+  if (list.length < limit.min) return fallback
+  let widgets = 0
+  let charts = 0
+  const kept: SlotKind[] = []
+  for (const slot of list) {
+    const kind: SlotKind | null =
+      slot === 'chart' && charts < limit.maxCharts ? 'chart' : widgets < limit.maxWidgets ? 'widget' : null
+    if (!kind || kept.length >= limit.max) continue
+    if (kind === 'chart') charts += 1
+    else widgets += 1
+    kept.push(kind)
+  }
+  return { slots: kept }
 }
 
 /** Base defaults ← the client's preset (clients/<id>.json) ← what this business wrote. Old configs have no book yet. */

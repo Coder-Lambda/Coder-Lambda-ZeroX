@@ -14,6 +14,7 @@ import { PresenceList } from './employees/PresenceList'
 import { ProductionView } from './production/ProductionView'
 import { useRules } from '../../rules/useRules'
 import './collaborators.css'
+import { WidgetStrip } from '../../widgets/WidgetGrid'
 
 type Section = 'employees' | 'partners' | 'suppliers'
 
@@ -67,6 +68,8 @@ export default function CollaboratorsModule() {
           </button>
         </div>
       </div>
+
+      <WidgetStrip place="collaborators" />
 
       <Routes>
         <Route index element={<Navigate to="funcionarios" replace />} />

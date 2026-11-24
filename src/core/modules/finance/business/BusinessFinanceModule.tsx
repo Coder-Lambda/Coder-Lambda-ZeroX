@@ -9,6 +9,7 @@ import { AccountsSection } from './AccountsSection'
 import { IncomeExpenses } from './IncomeExpenses'
 import '../finance.css'
 import './business.css'
+import { WidgetStrip } from '../../../widgets/WidgetGrid'
 
 const BASE = '/financas-empresa'
 const TABS = [
@@ -42,6 +43,8 @@ export default function BusinessFinanceModule() {
           ))}
         </nav>
       </div>
+
+      <WidgetStrip place="businessFinance" />
 
       <Routes>
         <Route index element={<Navigate to={`contas${search}`} replace />} />

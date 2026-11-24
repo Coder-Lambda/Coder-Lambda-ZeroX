@@ -887,3 +887,14 @@
     display: inline;
   }
 }
+@container app-content (max-width: 900px) {
+  .card-grid > .rulebook-card {
+    grid-column: span 12;
+  }
+}
+/* Four stat tiles need ~900px of content; with less, two per row (the 3-up rows shrink their text instead). */
+@container app-content (max-width: 900px) {
+  .stat-row:not(.stat-row-3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

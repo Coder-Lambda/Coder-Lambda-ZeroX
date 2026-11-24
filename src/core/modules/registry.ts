@@ -26,7 +26,13 @@ export interface ModuleDef {
 }
 
 export const BASE_MODULES: ModuleDef[] = [
-  { id: 'dashboard', path: 'dashboard', icon: LayoutDashboard, shell: { kind: 'widgets', widgets: 6, charts: 1 } },
+  {
+    id: 'dashboard',
+    path: 'dashboard',
+    icon: LayoutDashboard,
+    shell: { kind: 'widgets', widgets: 7, charts: 2 },
+    Page: lazy(() => import('./dashboard/DashboardModule')),
+  },
   {
     id: 'collaborators',
     path: 'colaboradores',
@@ -59,7 +65,8 @@ export const BASE_MODULES: ModuleDef[] = [
     id: 'mainDashboard',
     path: 'dashboard-principal',
     icon: ChartNoAxesCombined,
-    shell: { kind: 'widgets', widgets: 8, charts: 4, pages: 3 },
+    shell: { kind: 'widgets', widgets: 8, charts: 4 },
+    Page: lazy(() => import('./dashboard/MainDashboardModule')),
   },
 ]
 

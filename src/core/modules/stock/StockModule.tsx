@@ -16,6 +16,7 @@ import { StockContext, type StockContextValue, type StockDialog } from './StockC
 import { StockOverview } from './StockOverview'
 import { deleteMove, quantities, useStock } from './store'
 import './stock.css'
+import { WidgetStrip } from '../../widgets/WidgetGrid'
 
 const BASE = '/estoque'
 const TABS = [
@@ -84,6 +85,8 @@ export default function StockModule() {
           )}
         </div>
       </div>
+
+      <WidgetStrip place="stock" />
 
       <Routes>
         <Route index element={<Navigate to="geral" replace />} />

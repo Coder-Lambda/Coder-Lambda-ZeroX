@@ -9,6 +9,7 @@ import { SettingsPage } from './core/settings/SettingsPage'
 import { applyTheme } from './core/theme/applyTheme'
 
 const RuleBookPage = lazy(() => import('./core/rules/RuleBookPage'))
+const WidgetsPage = lazy(() => import('./core/widgets/WidgetsPage'))
 
 /** Outside the onboarding, the theme always follows the active business (mono when signed out). */
 function ThemeSync() {
@@ -43,6 +44,7 @@ export function App() {
             <Route path={`${SET_AS_WISH_PATH}/*`} element={<ExtensionRoutes />} />
             <Route path="configuracoes" element={<SettingsPage />} />
             <Route path="configuracoes/regras" element={<RuleBookPage />} />
+            <Route path="configuracoes/widgets" element={<WidgetsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
