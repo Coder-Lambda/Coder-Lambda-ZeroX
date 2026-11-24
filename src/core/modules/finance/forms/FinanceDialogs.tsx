@@ -32,7 +32,7 @@ export function FinanceDialogs({ dialog, onClose }: { dialog: FinanceDialog | nu
   return (
     <>
       <Dialog open={dialog?.type === 'accounts'} onClose={onClose} title={t.finance.accounts.title}>
-        {dialog?.type === 'accounts' && <AccountsPanel hint={dialog.hint} />}
+        {dialog?.type === 'accounts' && <AccountsPanel hint={dialog.hint} then={dialog.then} />}
       </Dialog>
       <Dialog open={dialog?.type === 'entry'} onClose={onClose} title={entryTitle}>
         {dialog?.type === 'entry' && (

@@ -1,7 +1,7 @@
-import { Suspense, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { ChartNoAxesColumn, PackagePlus, PackageMinus, Plus } from 'lucide-react'
-import { useClientExtension } from '../../extensions/useClientExtension'
+import { ExtensionTabLinks, extensionTabRoutes, useExtensionTabs } from '../../extensions/ExtensionTabs'
 import { t } from '../../i18n/pt-BR'
 import { PageHead } from '../../layout/PageHead'
 import { todayKey } from '../../lib/format'
@@ -31,9 +31,8 @@ export default function StockModule() {
   const { pathname } = useLocation()
   const segment = pathname.split('/')[2]
   const [dialog, setDialog] = useState<StockDialog | null>(null)
-  // A client can order extra tabs for this navbar; they come from its extension, never from the base.
-  const extension = useClientExtension(true)
-  const extraTabs = extension.status === 'ready' ? (extension.extension.moduleTabs?.stock ?? []) : []
+  // A client can order extra compartments for this navbar (set-as-wish); they come from its extension.
+  const { tabs: extraTabs, loading } = useExtensionTabs('stock')
 
   const value = useMemo<StockContextValue>(
     () => ({ data, qty: quantities(data), today, open: setDialog }),
@@ -63,12 +62,7 @@ export default function StockModule() {
               {t.stock.tabs[tab.id]}
             </NavLink>
           ))}
-          {extraTabs.map(({ path, label, icon: Icon }) => (
-            <NavLink key={path} to={`${BASE}/x/${path}`} className="module-tab tactile">
-              {Icon && <Icon aria-hidden="true" />}
-              {label}
-            </NavLink>
-          ))}
+          <ExtensionTabLinks base={BASE} tabs={extraTabs} />
         </nav>
         <div className="module-actions">
           <NavLink to={`${BASE}/visao-geral`} className="btn btn-secondary tactile stock-overview-link" aria-label={t.stock.overview}>
@@ -95,18 +89,8 @@ export default function StockModule() {
         <Route path="recebidos" element={<MovesList type="in" />} />
         <Route path="enviados" element={<MovesList type="out" />} />
         <Route path="visao-geral" element={<StockOverview />} />
-        {extraTabs.map(({ path, Component }) => (
-          <Route
-            key={path}
-            path={`x/${path}/*`}
-            element={
-              <Suspense fallback={<p className="text-2">{t.shell.loading}</p>}>
-                <Component />
-              </Suspense>
-            }
-          />
-        ))}
-        {extension.status !== 'loading' && <Route path="*" element={<Navigate to="geral" replace />} />}
+        {extensionTabRoutes(extraTabs)}
+        {!loading && <Route path="*" element={<Navigate to="geral" replace />} />}
       </Routes>
 
       <Dialog open={dialog?.type === 'product'} onClose={() => setDialog(null)} title={dialog?.type === 'product' && dialog.product ? t.stock.product.editTitle : t.stock.product.newTitle}>

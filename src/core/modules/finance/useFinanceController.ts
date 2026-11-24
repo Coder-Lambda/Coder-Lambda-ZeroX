@@ -24,8 +24,12 @@ export function useFinanceController(book: FinanceBook) {
       setParams(search, { replace: true })
     }
     // Money always moves through an account: ask for one first.
-    const open = (next: FinanceDialog) =>
-      setDialog((next.type === 'entry' || next.type === 'pay') && data.accounts.length === 0 ? { type: 'accounts', hint: true } : next)
+    const open = (next: FinanceDialog, options?: { accountReady?: boolean }) =>
+      setDialog(
+        (next.type === 'entry' || next.type === 'pay') && data.accounts.length === 0 && !options?.accountReady
+          ? { type: 'accounts', hint: true, then: next }
+          : next,
+      )
     return { book, data, month, setMonth, today, summary: financeSummary(data, month, today), open }
   }, [book, data, month, today, currentMonth, setParams])
 

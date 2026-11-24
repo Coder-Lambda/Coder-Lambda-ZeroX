@@ -8,15 +8,15 @@ import { haptic } from '../../../lib/haptic'
 import { ConfirmDialog } from '../../../ui/Dialog'
 import { TextInput } from '../../../ui/TextInput'
 import { toast } from '../../../ui/Toaster'
-import { useFinanceContext } from '../FinanceContext'
+import { useFinanceContext, type FinanceDialog } from '../FinanceContext'
 import { balanceAt, deleteAccount, saveAccount } from '../store'
 import type { FinAccount } from '../types'
 import { Money } from '../widgets/WidgetCard'
 import { FieldError } from './fields'
 
 /** List of accounts with their balances; add, rename or remove them. */
-export function AccountsPanel({ hint }: { hint?: boolean }) {
-  const { data, today } = useFinanceContext()
+export function AccountsPanel({ hint, then }: { hint?: boolean; then?: FinanceDialog }) {
+  const { data, today, open } = useFinanceContext()
   const [editing, setEditing] = useState<FinAccount | 'new' | null>(data.accounts.length === 0 ? 'new' : null)
   const [deleting, setDeleting] = useState<FinAccount | null>(null)
   const accounts = [...data.accounts].sort((a, b) => compareNames(a.name, b.name))
@@ -62,7 +62,13 @@ export function AccountsPanel({ hint }: { hint?: boolean }) {
 
       {editing === 'new' ? (
         <div className="well p-4">
-          <AccountForm onDone={() => setEditing(null)} />
+          <AccountForm
+            onDone={(created) => {
+              setEditing(null)
+              // The first account was asked for on the way to an entry or a payment: go on to it.
+              if (created && then) open(then, { accountReady: true })
+            }}
+          />
         </div>
       ) : (
         <div>
@@ -94,7 +100,7 @@ export function AccountsPanel({ hint }: { hint?: boolean }) {
   )
 }
 
-function AccountForm({ account, onDone }: { account?: FinAccount; onDone: () => void }) {
+function AccountForm({ account, onDone }: { account?: FinAccount; onDone: (created: boolean) => void }) {
   const { book } = useFinanceContext()
   const scope = useScope()
   const [name, setName] = useState(account?.name ?? '')
@@ -118,7 +124,7 @@ function AccountForm({ account, onDone }: { account?: FinAccount; onDone: () => 
     })
     haptic('success')
     toast(account ? t.finance.accounts.saved : t.finance.accounts.added(name.trim()))
-    onDone()
+    onDone(!account)
   }
 
   return (
@@ -148,7 +154,7 @@ function AccountForm({ account, onDone }: { account?: FinAccount; onDone: () => 
         prefix="R$"
       />
       <div className="form-actions span-2">
-        <button type="button" className="btn btn-secondary tactile" onClick={onDone}>
+        <button type="button" className="btn btn-secondary tactile" onClick={() => onDone(false)}>
           {t.common.cancel}
         </button>
         <button type="submit" className="btn btn-primary tactile">

@@ -3,7 +3,8 @@ import type { financeSummary } from './store'
 import type { FinanceBook, FinanceData, FinCategory, FinEntry, FinTitle } from './types'
 
 export type FinanceDialog =
-  | { type: 'accounts'; hint?: boolean }
+  /** `then`: what the client was opening when it found there is no account yet; it continues after one is added. */
+  | { type: 'accounts'; hint?: boolean; then?: FinanceDialog }
   | { type: 'entry'; entry?: FinEntry; entryType?: FinEntry['type']; preset?: Partial<FinEntry> }
   | { type: 'title'; title?: FinTitle; kind?: FinTitle['kind']; dueDate?: string }
   | { type: 'pay'; title: FinTitle }
@@ -18,7 +19,8 @@ export interface FinanceContextValue {
   setMonth: (month: string) => void
   today: string
   summary: ReturnType<typeof financeSummary>
-  open: (dialog: FinanceDialog) => void
+  /** `accountReady`: an account was just added, skip the "add an account first" check. */
+  open: (dialog: FinanceDialog, options?: { accountReady?: boolean }) => void
 }
 
 export const FinanceContext = createContext<FinanceContextValue | null>(null)

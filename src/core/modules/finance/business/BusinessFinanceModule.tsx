@@ -10,6 +10,7 @@ import { IncomeExpenses } from './IncomeExpenses'
 import '../finance.css'
 import './business.css'
 import { WidgetStrip } from '../../../widgets/WidgetGrid'
+import { ExtensionTabLinks, extensionTabRoutes, useExtensionTabs } from '../../../extensions/ExtensionTabs'
 
 const BASE = '/financas-empresa'
 const TABS = [
@@ -21,6 +22,7 @@ const TABS = [
 export default function BusinessFinanceModule() {
   const { value, dialog, closeDialog, currentMonth } = useFinanceController('business')
   const { search } = useLocation()
+  const { tabs: extraTabs, loading } = useExtensionTabs('businessFinance')
 
   return (
     <FinanceContext.Provider value={value}>
@@ -41,6 +43,7 @@ export default function BusinessFinanceModule() {
               {t.business.tabs[tab.id]}
             </NavLink>
           ))}
+          <ExtensionTabLinks base={BASE} tabs={extraTabs} search={search} />
         </nav>
       </div>
 
@@ -50,7 +53,8 @@ export default function BusinessFinanceModule() {
         <Route index element={<Navigate to={`contas${search}`} replace />} />
         <Route path="contas" element={<AccountsSection />} />
         <Route path="receitas-despesas" element={<IncomeExpenses />} />
-        <Route path="*" element={<Navigate to="contas" replace />} />
+        {extensionTabRoutes(extraTabs)}
+        {!loading && <Route path="*" element={<Navigate to="contas" replace />} />}
       </Routes>
 
       <FinanceDialogs dialog={dialog} onClose={closeDialog} />

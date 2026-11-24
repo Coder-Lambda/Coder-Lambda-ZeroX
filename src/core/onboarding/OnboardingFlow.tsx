@@ -16,6 +16,7 @@ import { DatabaseStep } from './steps/DatabaseStep'
 import { ModuleStep } from './steps/ModuleStep'
 import { NameStep } from './steps/NameStep'
 import { ThemeStep } from './steps/ThemeStep'
+import { WishStep } from './steps/WishStep'
 
 export function OnboardingFlow({ account, prefillName }: { account: Account; prefillName: string }) {
   const { addBusiness } = useSession()
@@ -38,11 +39,12 @@ export function OnboardingFlow({ account, prefillName }: { account: Account; pre
 
   const back = () => setDraft((d) => ({ ...d, stepIndex: Math.max(d.stepIndex - 1, 0) }))
 
+  // "Sim" to set-as-wish stays on the page to ask what to build; every other answer moves on.
   const answerModule = (module: ModuleId, enabled: boolean) =>
     setDraft((d) => ({
       ...d,
       modules: { ...d.modules, [module]: enabled },
-      stepIndex: Math.min(d.stepIndex + 1, steps.length - 1),
+      stepIndex: module === 'setAsWish' && enabled ? d.stepIndex : Math.min(d.stepIndex + 1, steps.length - 1),
     }))
 
   const finish = () => {
@@ -58,6 +60,10 @@ export function OnboardingFlow({ account, prefillName }: { account: Account; pre
       modules,
       layout: {},
       labels: {},
+      wishes:
+        modules.setAsWish && draft.wishes?.length
+          ? draft.wishes.map((w) => ({ id: newId('wish'), kind: w.kind, text: w.text, createdAt: new Date().toISOString() }))
+          : undefined,
       createdAt: new Date().toISOString(),
     }
     clearDraft(account.id)
@@ -106,6 +112,11 @@ export function OnboardingFlow({ account, prefillName }: { account: Account; pre
           name={name}
           value={draft.modules[step.module]}
           onAnswer={(enabled) => answerModule(step.module, enabled)}
+          wish={
+            step.module === 'setAsWish' && draft.modules.setAsWish === true ? (
+              <WishStep initial={draft.wishes ?? []} onDone={(wishes) => advance({ wishes })} />
+            ) : undefined
+          }
         />
       )}
     </StepFrame>

@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from 'react'
 import { t } from '../i18n/pt-BR'
+import { extensionWidgets } from './extensionRegistry'
 import type { FinanceBook } from '../modules/finance/types'
 import {
   AbsencesWidget,
@@ -162,11 +164,39 @@ export const WIDGETS: WidgetDef[] = [
   { type: 'stock.worstMonth', source: 'stock', kinds: ['widget'], places: [M], unavailable: needsModule('stock'), render: (p) => <MonthRecordWidget {...p} order="worst" /> },
 ]
 
-export const widgetDef = (type: string) => WIDGETS.find((d) => d.type === type)
+const setAsWish = (ctx: WidgetContext) => (ctx.modules.setAsWish ? null : t.widgets.unavailable.module(t.modules.setAsWish.label))
+
+/** The client extension's widgets (set-as-wish), in the catalog's shape. */
+function extraWidgets(): WidgetDef[] {
+  return extensionWidgets.list().map((w) => ({
+    ...w,
+    source: 'setAsWish',
+    unavailable: both(setAsWish, (ctx) => w.unavailable?.(ctx) ?? null),
+  }))
+}
+
+/** Base widgets and the client's own. */
+export const allWidgets = () => [...WIDGETS, ...extraWidgets()]
+
+export const widgetDef = (type: string) => allWidgets().find((d) => d.type === type)
+
+/** Title and description: the base copy, or what the client's extension says. */
+export function widgetCopy(type: string) {
+  const base = t.widgets.types[type]
+  if (base) return base
+  const extra = extensionWidgets.list().find((w) => w.type === type)
+  return extra ? { title: extra.title, description: extra.description } : { title: type, description: '' }
+}
+
+/** Re-renders when the client's extension registers its widgets (it loads after the first paint). */
+export function useWidgetCatalog() {
+  useSyncExternalStore(extensionWidgets.subscribe, extensionWidgets.version)
+  return { loadingExtension: extensionWidgets.status() === 'loading' }
+}
 
 /** Widgets offered in a place, and the kinds each can take there (module strips only hold small widgets). */
 export function offeredIn(place: WidgetPlace) {
-  return WIDGETS.filter((d) => d.places.includes(place)).map((d) => ({
+  return allWidgets().filter((d) => d.places.includes(place)).map((d) => ({
     def: d,
     kinds: place === 'dashboard' || place === 'mainDashboard' ? d.kinds : d.kinds.filter((k) => k === 'widget'),
   }))

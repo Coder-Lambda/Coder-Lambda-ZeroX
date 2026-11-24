@@ -8,7 +8,9 @@ export function niceScale(values: number[], count = 4) {
   const rawStep = (max - min) / count
   const magnitude = 10 ** Math.floor(Math.log10(rawStep))
   const normalized = rawStep / magnitude
-  const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude
+  let step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude
+  // Counts (employees, absences, products) never get "0,5" ticks.
+  if (values.every(Number.isInteger)) step = Math.max(step, 1)
   min = Math.floor(min / step) * step
   max = Math.ceil(max / step) * step
   const ticks: number[] = []

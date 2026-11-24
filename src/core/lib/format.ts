@@ -36,6 +36,11 @@ export function toDateKey(date: Date) {
   return `${y}-${m}-${d}`
 }
 
+/** The local calendar day of a timestamp (an ISO string is UTC: slicing it would give tomorrow late at night). */
+export function localDayOf(iso: string) {
+  return toDateKey(new Date(iso))
+}
+
 export function todayKey() {
   return toDateKey(new Date())
 }

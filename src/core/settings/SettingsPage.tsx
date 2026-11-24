@@ -8,15 +8,20 @@ import { PageHead } from '../layout/PageHead'
 import { applyTheme } from '../theme/applyTheme'
 import { ThemeCard } from '../theme/ThemeCard'
 import { THEMES } from '../theme/themes'
+import { WishesCard } from '../wishes/WishesCard'
+import { useActiveExtension } from '../extensions/useClientExtension'
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR')
 
 export function SettingsPage() {
   const { account, active, businesses, updateActive, selectBusiness, signOut } = useSession()
   const navigate = useNavigate()
+  const extension = useActiveExtension()
   if (!active || !account) return null
-  // One chapter of the rule book per base module chosen in the onboarding.
-  const chapters = MODULE_IDS.filter((id) => id !== 'setAsWish' && active.modules[id]).length
+  // One chapter of the rule book per base module chosen in the onboarding, plus the client's own chapters.
+  const chapters =
+    MODULE_IDS.filter((id) => id !== 'setAsWish' && active.modules[id]).length +
+    (extension.status === 'ready' ? (extension.extension.ruleChapters?.length ?? 0) : 0)
 
   return (
     <>
@@ -52,6 +57,8 @@ export function SettingsPage() {
             </span>
           </span>
         </section>
+
+        {active.modules.setAsWish && <WishesCard />}
 
         <section className="glass card span-12">
           <h2 className="card-title">{t.settings.theme}</h2>

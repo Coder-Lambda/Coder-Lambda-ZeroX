@@ -35,7 +35,7 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 ## Build order (one prompt each)
 
 &onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& (done) →
-&rulesandactions& (done) → &widgets& (done) → &maindashboard& (done) → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
+&rulesandactions& (done) → &widgets& (done) → &maindashboard& (done) → &whatisleft& (done). Each prompt fills its own module; a built module sets `Page` in
 `src/core/modules/registry.ts`, the others show their placeholder shell.
 
 - Collaborators (`src/core/modules/collaborators/`): employees (sheet import, filters, card with 7 widgets,
@@ -88,7 +88,27 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
   single-series charts use `--chart-accent`.
 - Data hooks: `useTable()` (src/core/data/useTable.ts) re-reads on every write; files go to IndexedDB (`fileStore`).
 
+## Set-as-wish: building what a client asks for
+
+A business that says yes to set-as-wish writes its requests in the onboarding (or later in Configurações ›
+Set-as-wish); they are saved in `ClientConfig.wishes` (kind: part | compartment | rule). To build one, only touch
+`src/extensions/<clientId>/` (and `clients/<clientId>.json` + `dev:<id>`/`build:<id>` scripts if the client is new):
+
+- **New part** (a page in the sidebar): `routes`, mounted under `/set-as-wish/<path>`.
+- **Compartment** (a tab inside a module): `moduleTabs.collaborators | stock | businessFinance`, mounted under
+  `/<module>/x/<path>` (helpers in `src/core/extensions/ExtensionTabs.tsx`).
+- **Rule**: `ruleChapters` (a chapter of the Livro de regras); its component uses `useCustomRules(id, defaults)`
+  and can reuse `RuleRow` / `NumberRule` from `src/core/rules/parts.tsx`. Values live in `rules.custom[id]`.
+- **Widget**: `widgets` (catalog shape plus title/description); widgets read `data.rules.custom` and every table
+  through `WidgetProps.data`. They join the Criar widget wizard under "Set-as-wish".
+- Labels: `labels` overrides module names.
+
+All of it only shows for businesses with set-as-wish on (`useActiveExtension()`), and only ships in that client's
+build. `src/extensions/demo` has one working example of each. If a request would help every client, build it in
+the base instead.
+
 ## Commands
 
-- `npm run dev:demo` / `npm run build:demo`
+- `npm run dev:demo` / `npm run build:demo` (demo client, has an example of every extension point)
+- `npm run dev:dahjon` / `npm run build:dahjon` (Dahjon's preset rules, no extension)
 - `npm run lint` (tsc + eslint)

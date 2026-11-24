@@ -1,11 +1,12 @@
-import { useEffect, type ReactNode } from 'react'
+import { Suspense, useEffect, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowLeft, Check, Database } from 'lucide-react'
+import { ArrowLeft, Check, Database, WandSparkles, type LucideIcon } from 'lucide-react'
 import { useSession } from '../auth/SessionProvider'
 import type { BaseModuleId } from '../config/types'
 import { t } from '../i18n/pt-BR'
 import { PageHead } from '../layout/PageHead'
 import { MODULE_ICONS } from '../modules/registry'
+import { useActiveExtension } from '../extensions/useClientExtension'
 import { CollaboratorsChapter } from './chapters/CollaboratorsChapter'
 import { DashboardChapter, MainDashboardChapter } from './chapters/DashboardChapter'
 import { BusinessFinanceChapter, PersonalFinanceChapter } from './chapters/FinanceChapters'
@@ -32,13 +33,28 @@ function goTo(id: string) {
 export default function RuleBookPage() {
   const { active } = useSession()
   const { hash } = useLocation()
+  const extension = useActiveExtension()
   // Links like /configuracoes/regras#regras-collaborators open the book on that chapter.
   useEffect(() => {
     if (hash.startsWith('#regras-')) requestAnimationFrame(() => goTo(hash.slice('#regras-'.length)))
   }, [hash])
   if (!active) return null
-  const chapters = CHAPTERS.filter((c) => active.modules[c.id])
   const labelFor = (id: BaseModuleId) => active.labels[id] ?? t.modules[id].label
+  // The base chapters of the modules chosen in the onboarding, then the client's own (set-as-wish).
+  const chapters: { id: string; title: string; sub: string; icon: LucideIcon; body: ReactNode }[] = [
+    ...CHAPTERS.filter((c) => active.modules[c.id]).map((c) => ({ ...c, title: labelFor(c.id), icon: MODULE_ICONS[c.id] })),
+    ...(extension.status === 'ready' ? (extension.extension.ruleChapters ?? []) : []).map(({ id, title, sub, icon, Component }) => ({
+      id: `x-${id}`,
+      title,
+      sub,
+      icon: icon ?? WandSparkles,
+      body: (
+        <Suspense fallback={<p className="text-2">{t.shell.loading}</p>}>
+          <Component />
+        </Suspense>
+      ),
+    })),
+  ]
   const { database } = active
   const storage =
     database.hasExisting && database.provider
@@ -72,7 +88,7 @@ export default function RuleBookPage() {
         <>
           <nav className="rule-index ob-chips" aria-label={t.rules.chaptersLabel}>
             {chapters.map((c, i) => {
-              const Icon = MODULE_ICONS[c.id]
+              const Icon = c.icon
               return (
                 <a
                   key={c.id}
@@ -85,14 +101,14 @@ export default function RuleBookPage() {
                 >
                   <span className="num">{i + 1}</span>
                   <Icon size={14} aria-hidden="true" />
-                  {labelFor(c.id)}
+                  {c.title}
                 </a>
               )
             })}
           </nav>
           <div className="rule-book">
             {chapters.map((c, i) => (
-              <Chapter key={c.id} id={c.id} number={i + 1} icon={MODULE_ICONS[c.id]} title={labelFor(c.id)} sub={c.sub}>
+              <Chapter key={c.id} id={c.id} number={i + 1} icon={c.icon} title={c.title} sub={c.sub}>
                 {c.body}
               </Chapter>
             ))}

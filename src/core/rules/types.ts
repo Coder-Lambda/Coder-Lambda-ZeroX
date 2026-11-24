@@ -133,6 +133,8 @@ export interface RuleBook {
   stock: StockRules
   dashboard: DashboardRules
   mainDashboard: MainDashboardRules
+  /** Chapters built for one client (set-as-wish): values by chapter id, shaped by the client's extension. */
+  custom: Record<string, Record<string, unknown>>
 }
 
 export type RuleChapter = keyof RuleBook

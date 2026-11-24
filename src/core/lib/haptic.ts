@@ -11,5 +11,7 @@ const PATTERNS = {
 /** Progressive enhancement only (Android Chrome). Visual feedback is always the primary signal. */
 export function haptic(pattern: keyof typeof PATTERNS) {
   if (!('vibrate' in navigator)) return
+  // Browsers block (and log an error for) vibration before the person has interacted with the page.
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return
   navigator.vibrate(PATTERNS[pattern])
 }

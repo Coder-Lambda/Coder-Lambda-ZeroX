@@ -41,6 +41,7 @@ export const DEFAULT_RULES: RuleBook = {
   stock: { units: [], itemValue: false, fields: [] },
   dashboard: { slots: slots(7, 2) },
   mainDashboard: { pages: Array.from({ length: MAIN_DASHBOARD_PAGES }, () => ({ name: '', slots: slots(5, 2) })) },
+  custom: {},
 }
 
 const CHAPTERS = Object.keys(DEFAULT_RULES) as RuleChapter[]

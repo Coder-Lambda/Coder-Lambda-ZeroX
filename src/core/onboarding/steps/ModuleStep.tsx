@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { ModuleId } from '../../config/types'
 import { t } from '../../i18n/pt-BR'
 import { haptic } from '../../lib/haptic'
@@ -9,9 +10,11 @@ interface ModuleStepProps {
   name: string
   value: boolean | undefined
   onAnswer: (enabled: boolean) => void
+  /** Set-as-wish: what to build, shown after "Sim". */
+  wish?: ReactNode
 }
 
-export function ModuleStep({ module, name, value, onAnswer }: ModuleStepProps) {
+export function ModuleStep({ module, name, value, onAnswer, wish }: ModuleStepProps) {
   const copy = t.modules[module]
   const Icon = MODULE_ICONS[module]
 
@@ -57,6 +60,7 @@ export function ModuleStep({ module, name, value, onAnswer }: ModuleStepProps) {
           {t.common.yes}
         </button>
       </div>
+      {wish}
     </>
   )
 }

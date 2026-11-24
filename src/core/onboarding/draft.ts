@@ -1,5 +1,5 @@
 import { CLIENT_ID } from '../config/clientRegistry'
-import type { DatabaseChoice, ModuleFlags, PaletteThemeId } from '../config/types'
+import type { DatabaseChoice, ModuleFlags, PaletteThemeId, WishKind } from '../config/types'
 
 export interface OnboardingDraft {
   phase: 'intro' | 'steps'
@@ -9,6 +9,8 @@ export interface OnboardingDraft {
   businessType: string
   database: DatabaseChoice | null
   modules: Partial<ModuleFlags>
+  /** Set-as-wish requests written on that page. */
+  wishes?: { kind: WishKind; text: string }[]
 }
 
 const key = (accountId: string) => `zerox:onboarding:${CLIENT_ID}:${accountId}`

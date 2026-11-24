@@ -13,6 +13,7 @@ import { ImportDialog } from './employees/ImportDialog'
 import { PresenceList } from './employees/PresenceList'
 import { ProductionView } from './production/ProductionView'
 import { useRules } from '../../rules/useRules'
+import { ExtensionTabLinks, extensionTabRoutes, useExtensionTabs } from '../../extensions/ExtensionTabs'
 import './collaborators.css'
 import { WidgetStrip } from '../../widgets/WidgetGrid'
 
@@ -31,6 +32,8 @@ export default function CollaboratorsModule() {
   const [dialog, setDialog] = useState<Section | 'import' | null>(null)
   const { collaborators: rules } = useRules().rules
   const toDirectory = <Navigate to="/colaboradores/funcionarios" replace />
+  const { tabs: extraTabs, loading } = useExtensionTabs('collaborators')
+  const onExtraTab = segment === 'x'
 
   return (
     <>
@@ -43,8 +46,9 @@ export default function CollaboratorsModule() {
               {t.collab.tabs[s.id]}
             </NavLink>
           ))}
+          <ExtensionTabLinks base="/colaboradores" tabs={extraTabs} />
         </nav>
-        <div className="module-actions">
+        <div className="module-actions" style={onExtraTab ? { display: 'none' } : undefined}>
           {section === 'employees' && (
             <button
               type="button"
@@ -81,7 +85,8 @@ export default function CollaboratorsModule() {
         <Route path="parceiros/:id" element={<ContactDetail kind="partners" />} />
         <Route path="fornecedores" element={<ContactsList kind="suppliers" onAdd={() => setDialog('suppliers')} />} />
         <Route path="fornecedores/:id" element={<ContactDetail kind="suppliers" />} />
-        <Route path="*" element={<Navigate to="funcionarios" replace />} />
+        {extensionTabRoutes(extraTabs)}
+        {!loading && <Route path="*" element={<Navigate to="funcionarios" replace />} />}
       </Routes>
 
       <EmployeeForm open={dialog === 'employees'} onClose={() => setDialog(null)} />

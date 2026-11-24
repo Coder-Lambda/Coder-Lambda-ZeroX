@@ -24,6 +24,16 @@ export interface DatabaseChoice {
   provider: 'supabase' | 'other' | null
 }
 
+/** What a set-as-wish client asks the ZeroX team to build: a new part, a rule, or a compartment in a module. */
+export type WishKind = 'part' | 'rule' | 'compartment'
+
+export interface Wish {
+  id: string
+  kind: WishKind
+  text: string
+  createdAt: string
+}
+
 /** One per business. Written by the onboarding; this is data, never code. */
 export interface ClientConfig {
   clientId: string
@@ -40,6 +50,8 @@ export interface ClientConfig {
   labels: Record<string, string>
   /** The Livro de regras (src/core/rules). Read it with readRules(), which fills what is missing. */
   rules?: RuleBookPreset
+  /** Set-as-wish requests to the ZeroX team (onboarding or Configurações). */
+  wishes?: Wish[]
   createdAt: string
 }
 

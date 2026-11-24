@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import { ChartColumn, CircleSlash, Plus, Table2 } from 'lucide-react'
 import { t } from '../i18n/pt-BR'
 import { MODULE_ICONS } from '../modules/registry'
-import { widgetDef } from './catalog'
+import { useWidgetCatalog, widgetCopy, widgetDef } from './catalog'
 import { useWidgetData } from './data'
 import type { WidgetInstance, WidgetKind, WidgetPlace } from './types'
 
 /** A widget's title: its name, plus the period when it has one. */
 export function widgetTitle(instance: Pick<WidgetInstance, 'type' | 'period'>) {
   const def = widgetDef(instance.type)
-  const name = t.widgets.types[instance.type]?.title ?? instance.type
+  const name = widgetCopy(instance.type).title
   return def?.periodic ? `${name} · ${t.widgets.periodTitle[instance.period ?? 'daily']}` : name
 }
 
@@ -27,7 +27,10 @@ export function WidgetSlot({
 }) {
   const data = useWidgetData()
   const [asTable, setAsTable] = useState(false)
+  const { loadingExtension } = useWidgetCatalog()
   const def = widgetDef(instance.type)
+  // A client widget whose extension is still loading: hold its place instead of calling it missing.
+  if (!def && loadingExtension) return <div className={`widget-empty is-${instance.kind}`} aria-busy="true" />
   const reason = def ? (def.unavailable?.({ modules: data.modules, rules: data.rules }) ?? null) : t.widgets.unknown
   const title = widgetTitle(instance)
 

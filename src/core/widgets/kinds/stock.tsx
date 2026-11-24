@@ -1,5 +1,5 @@
 import { t } from '../../i18n/pt-BR'
-import { compareNames } from '../../lib/format'
+import { compareNames, localDayOf } from '../../lib/format'
 import { monthLabel } from '../../lib/month'
 import { quantities, stockSummary } from '../../modules/stock/store'
 import type { StockData, StockMove } from '../../modules/stock/types'
@@ -172,7 +172,7 @@ export function RankingWidget({ data, instance, asTable, order }: WidgetProps & 
 /** The month with the most (or least) stock sent, since the stock started, up to 12 months back. */
 export function MonthRecordWidget({ data, order }: WidgetProps & { order: 'best' | 'worst' }) {
   const { moves, products } = data.stock
-  const started = [...products.map((p) => p.createdAt.slice(0, 7)), ...moves.map((m) => m.date.slice(0, 7))].sort()[0]
+  const started = [...products.map((p) => localDayOf(p.createdAt).slice(0, 7)), ...moves.map((m) => m.date.slice(0, 7))].sort()[0]
   if (!started) return <Muted>{w.labels.noSales}</Muted>
   const current = data.today.slice(0, 7)
   const months = buckets('monthly', data.today, 12).filter((m) => m >= started && m <= current)

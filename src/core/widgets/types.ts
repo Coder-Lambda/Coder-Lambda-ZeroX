@@ -15,7 +15,7 @@ export type WidgetKind = 'widget' | 'chart'
 export type Period = 'daily' | 'monthly' | 'yearly'
 
 /** The module whose data a widget reads. */
-export type WidgetSource = 'collaborators' | 'personalFinance' | 'businessFinance' | 'stock'
+export type WidgetSource = 'collaborators' | 'personalFinance' | 'businessFinance' | 'stock' | 'setAsWish'
 
 /** One widget the business added somewhere. */
 export interface WidgetInstance {

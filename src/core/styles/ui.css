@@ -908,3 +908,46 @@
   border: 0;
   border-top: 1px solid var(--line);
 }
+
+/* ── Set-as-wish: requests and what was built ── */
+.wish-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+}
+.wish-row .tag {
+  flex-shrink: 0;
+}
+.wish-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.wishes-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.wishes-heading {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+@container app-content (max-width: 760px) {
+  .wishes-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ob-wish {
+  margin-top: 18px;
+  text-align: left;
+}

@@ -1,5 +1,5 @@
 import { t } from '../../i18n/pt-BR'
-import { compareNames } from '../../lib/format'
+import { compareNames, localDayOf } from '../../lib/format'
 import { leaveOn } from '../../modules/collaborators/rules'
 import { teamTotal } from '../../modules/collaborators/production/production'
 import { wasOnList } from '../../modules/collaborators/store'
@@ -134,7 +134,7 @@ export function ProductionWidget(props: WidgetProps) {
 
 /** Employees on the list at the end of a bucket. */
 function headcountAt(data: WidgetData, day: string) {
-  return data.employees.filter((e) => e.createdAt.slice(0, 10) <= day && wasOnList(e, day)).length
+  return data.employees.filter((e) => localDayOf(e.createdAt) <= day && wasOnList(e, day)).length
 }
 
 export function HeadcountWidget(props: WidgetProps) {

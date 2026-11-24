@@ -21,6 +21,20 @@ export function useRules() {
   return { rules, saveChapter }
 }
 
+/**
+ * A client's own rule chapter (set-as-wish): its values over the defaults its extension gives, and a save that
+ * merges a patch. Used by code in src/extensions/<clientId>.
+ */
+export function useCustomRules<T extends Record<string, unknown>>(id: string, defaults: T) {
+  const { rules, saveChapter } = useRules()
+  const value = { ...defaults, ...(rules.custom[id] as Partial<T> | undefined) } as T
+  const save = useCallback(
+    (patch: Partial<T>) => saveChapter('custom', (custom) => ({ ...custom, [id]: { ...defaults, ...custom[id], ...patch } })),
+    [saveChapter, id, defaults],
+  )
+  return [value, save] as const
+}
+
 /** One chapter: `save` merges a patch; `update` derives the patch from the latest saved chapter (use it for lists). */
 export function useChapter<K extends RuleChapter>(chapter: K) {
   const { rules, saveChapter } = useRules()

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { CLIENT_ID } from '../../config/clientRegistry'
 import { localDb, newId } from '../../data/localDb'
 import { useTable } from '../../data/useTable'
-import { normalize, toDateKey } from '../../lib/format'
+import { localDayOf, normalize, toDateKey } from '../../lib/format'
 import { dayKey, daysInMonth } from '../../lib/month'
 import type { StockData, StockMove, StockProduct } from './types'
 
@@ -71,7 +71,7 @@ export function dailyFlows(moves: StockMove[], month: string, productId?: string
 /** Quantity at the end of each day; no value before the product was registered or after today. */
 export function levelSeries(product: StockProduct, moves: StockMove[], days: string[], today: string) {
   const firstMove = moves.filter((m) => m.productId === product.id).reduce((min, m) => (m.date < min ? m.date : min), '9999')
-  const since = [product.createdAt.slice(0, 10), firstMove].sort()[0]
+  const since = [localDayOf(product.createdAt), firstMove].sort()[0]
   return days.map((d) => (d >= since && d <= today ? quantityOf(product, moves, d) : null))
 }
 

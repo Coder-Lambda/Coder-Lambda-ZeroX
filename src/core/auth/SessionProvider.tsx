@@ -22,7 +22,7 @@ interface SessionValue {
   updateActive: (patch: ActivePatch | ((latest: ClientConfig) => ActivePatch)) => void
 }
 
-type ActivePatch = Partial<Pick<ClientConfig, 'theme' | 'layout' | 'labels' | 'rules'>>
+type ActivePatch = Partial<Pick<ClientConfig, 'theme' | 'layout' | 'labels' | 'rules' | 'wishes'>>
 
 const SessionContext = createContext<SessionValue | null>(null)
 
