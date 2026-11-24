@@ -38,16 +38,16 @@ export function AppShell() {
   const extension = extensionState.status === 'ready' ? extensionState.extension : null
   const labelFor = (id: ModuleId) => extension?.labels[id] ?? active.labels[id] ?? t.modules[id].label
 
-  const moduleEntries: NavEntry[] = BASE_MODULES.filter((m) => enabled[m.id]).map((m) => ({
-    to: `/${m.path}`,
-    label: labelFor(m.id),
-    icon: m.icon,
-  }))
+  const toEntry = (m: (typeof BASE_MODULES)[number]): NavEntry => ({ to: `/${m.path}`, label: labelFor(m.id), icon: m.icon })
+  // The Dashboard is the first item and the Dashboard principal always the last one, after the client's own pages.
+  const moduleEntries: NavEntry[] = BASE_MODULES.filter((m) => enabled[m.id] && m.id !== 'mainDashboard').map(toEntry)
+  const mainEntries: NavEntry[] = BASE_MODULES.filter((m) => enabled[m.id] && m.id === 'mainDashboard').map(toEntry)
   const extensionEntries: NavEntry[] = (extension?.routes ?? []).map((r) => ({
     to: `/${SET_AS_WISH_PATH}/${r.path}`,
     label: r.label,
     icon: r.icon ?? WandSparkles,
   }))
+  const allEntries = [...moduleEntries, ...extensionEntries, ...mainEntries]
 
   const toggleSidebar = () => {
     writePref('sidebar-collapsed', collapsed ? '0' : '1')
@@ -78,6 +78,10 @@ export function AppShell() {
                 ))}
               </>
             )}
+            {mainEntries.length > 0 && extensionEntries.length > 0 && <hr className="nav-divider" />}
+            {mainEntries.map((entry) => (
+              <SideItem key={entry.to} entry={entry} />
+            ))}
           </nav>
           <div className="sidebar-foot">
             <div className="sidebar-business">
@@ -122,9 +126,9 @@ export function AppShell() {
           </Suspense>
         </main>
 
-        {moduleEntries.length + extensionEntries.length > 0 && (
+        {allEntries.length > 0 && (
           <nav className="bottombar glass" aria-label={t.shell.navModules}>
-            {[...moduleEntries, ...extensionEntries].map(({ to, label, icon: Icon }) => (
+            {allEntries.map(({ to, label, icon: Icon }) => (
               <NavLink key={to} to={to} className="tab-item">
                 <Icon />
                 <span>{label}</span>

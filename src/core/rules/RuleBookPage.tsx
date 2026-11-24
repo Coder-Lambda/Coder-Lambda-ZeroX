@@ -7,7 +7,7 @@ import { t } from '../i18n/pt-BR'
 import { PageHead } from '../layout/PageHead'
 import { MODULE_ICONS } from '../modules/registry'
 import { CollaboratorsChapter } from './chapters/CollaboratorsChapter'
-import { DashboardChapter } from './chapters/DashboardChapter'
+import { DashboardChapter, MainDashboardChapter } from './chapters/DashboardChapter'
 import { BusinessFinanceChapter, PersonalFinanceChapter } from './chapters/FinanceChapters'
 import { StockChapter } from './chapters/StockChapter'
 import { Chapter } from './parts'
@@ -15,12 +15,12 @@ import './rules.css'
 
 /** Chapters in the order of the modules; each one only exists for a module chosen in the onboarding. */
 const CHAPTERS: { id: BaseModuleId; sub: string; body: ReactNode }[] = [
-  { id: 'dashboard', sub: t.rules.dashboard.sub, body: <DashboardChapter chapter="dashboard" /> },
+  { id: 'dashboard', sub: t.rules.dashboard.sub, body: <DashboardChapter /> },
   { id: 'collaborators', sub: t.rules.collaborators.sub, body: <CollaboratorsChapter /> },
   { id: 'personalFinance', sub: t.rules.personalFinance.sub, body: <PersonalFinanceChapter /> },
   { id: 'stock', sub: t.rules.stock.sub, body: <StockChapter /> },
   { id: 'businessFinance', sub: t.rules.businessFinance.sub, body: <BusinessFinanceChapter /> },
-  { id: 'mainDashboard', sub: t.rules.dashboard.mainSub, body: <DashboardChapter chapter="mainDashboard" /> },
+  { id: 'mainDashboard', sub: t.rules.dashboard.mainSub, body: <MainDashboardChapter /> },
 ]
 
 /** Scrolls the content area to a chapter (smoothly, unless the user asked for reduced motion). */

@@ -127,7 +127,7 @@ export const t = {
     mainDashboard: {
       label: 'Dashboard principal',
       question: (name) => `${name}, quer o Dashboard principal?`,
-      description: 'Até 15 widgets e 6 gráficos sobre todo o negócio: tudo do dashboard, mais completo.',
+      description: 'Três páginas com nome seu, cada uma com até 5 widgets e 2 gráficos: tudo do dashboard, mais completo.',
       sections: [],
     },
     setAsWish: {
@@ -838,6 +838,18 @@ export const t = {
     widgetsCreate: 'Criar widget',
   },
 
+  dashboard: {
+    greeting: { morning: 'Bom dia', afternoon: 'Boa tarde', night: 'Boa noite' },
+    greet: (greeting: string, name: string) => `${greeting}, ${name}!`,
+    question: 'O que vamos fazer hoje?',
+    organize: 'Organizar',
+    doneOrganizing: 'Pronto',
+    organizeHint: 'Use as setas para mudar a ordem, troque o widget de página ou remova. Lugares vazios criam um widget.',
+    pagesLabel: 'Páginas do dashboard principal',
+    pageName: (n: number) => `Nome da página ${n}`,
+    renamed: (name: string) => `Página agora se chama ${name}`,
+  },
+
   rules: {
     title: 'Livro de regras',
     sub: 'As regras do seu negócio. O ZeroX trabalha do jeito que estiver escrito aqui.',
@@ -1017,7 +1029,11 @@ export const t = {
 
     dashboard: {
       sub: 'Quantos quadros o dashboard tem e quais deles viram gráficos.',
-      mainSub: 'Quantos quadros cada página do dashboard principal tem e quais deles viram gráficos.',
+      mainSub: 'As três páginas do dashboard principal: o nome de cada uma e quantos quadros ela tem.',
+      pageTitle: (n: number) => `Página ${n}`,
+      pageHint: (maxWidgets: number, maxCharts: number) =>
+        `Até ${maxWidgets} widgets e ${maxCharts} gráficos nesta página. Toque em um quadro para trocar widget por gráfico.`,
+      pageName: 'Nome da página',
       title: 'Quadros',
       hint: (max: number, maxWidgets: number, maxCharts: number) =>
         max < maxWidgets + maxCharts
@@ -1059,6 +1075,16 @@ export const t = {
     emptyModule: 'Nenhum widget no topo deste módulo.',
     unknown: 'Este widget não existe mais.',
     failed: 'Não foi possível mostrar este widget agora.',
+    organize: {
+      label: (name: string) => `Organizar ${name}`,
+      earlier: (name: string) => `Mover ${name} para antes`,
+      later: (name: string) => `Mover ${name} para depois`,
+      toPage: (name: string) => `Página de ${name}`,
+      moved: (name: string, page: string) => `${name} foi para ${page}`,
+      remove: (name: string) => `Remover ${name}`,
+      full: 'cheia',
+    },
+    page: 'Página',
     noData: 'Sem dados ainda.',
     moveUp: (name: string) => `Subir ${name}`,
     moveDown: (name: string) => `Descer ${name}`,

@@ -15,7 +15,16 @@ export function widgetTitle(instance: Pick<WidgetInstance, 'type' | 'period'>) {
 }
 
 /** One widget or chart in its glass card; charts can switch to their table. */
-export function WidgetSlot({ instance, extended = false }: { instance: WidgetInstance; extended?: boolean }) {
+export function WidgetSlot({
+  instance,
+  extended = false,
+  toolbar,
+}: {
+  instance: WidgetInstance
+  extended?: boolean
+  /** Organize mode controls. */
+  toolbar?: ReactNode
+}) {
   const data = useWidgetData()
   const [asTable, setAsTable] = useState(false)
   const def = widgetDef(instance.type)
@@ -28,6 +37,7 @@ export function WidgetSlot({ instance, extended = false }: { instance: WidgetIns
         <CircleSlash aria-hidden="true" />
         <strong>{title}</strong>
         <span>{reason}</span>
+        {toolbar}
       </div>
     )
   }
@@ -52,6 +62,7 @@ export function WidgetSlot({ instance, extended = false }: { instance: WidgetIns
           </button>
         )}
       </header>
+      {toolbar}
       <div className="widget-card-body">
         <WidgetBoundary>{def.render({ instance, data, extended, asTable })}</WidgetBoundary>
       </div>
@@ -60,9 +71,10 @@ export function WidgetSlot({ instance, extended = false }: { instance: WidgetIns
 }
 
 /** An empty place on a dashboard: a shortcut to create the widget or chart that fills it. */
-export function EmptySlot({ place, kind }: { place: WidgetPlace; kind: WidgetKind }) {
+export function EmptySlot({ place, kind, page = 0 }: { place: WidgetPlace; kind: WidgetKind; page?: number }) {
+  const query = `criar=${place}&tipo=${kind}${place === 'mainDashboard' ? `&pagina=${page + 1}` : ''}`
   return (
-    <Link to={`/configuracoes/widgets?criar=${place}&tipo=${kind}`} className={`widget-empty is-${kind} tactile`}>
+    <Link to={`/configuracoes/widgets?${query}`} className={`widget-empty is-${kind} tactile`}>
       <Plus aria-hidden="true" />
       {kind === 'chart' ? t.widgets.addChart : t.widgets.addWidget}
     </Link>

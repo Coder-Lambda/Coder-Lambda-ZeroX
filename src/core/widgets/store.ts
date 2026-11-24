@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useSession } from '../auth/SessionProvider'
 import type { ClientConfig } from '../config/types'
 import { newId } from '../data/localDb'
-import { readRules } from '../rules/defaults'
+import { MAIN_DASHBOARD_PAGES, readRules } from '../rules/defaults'
 import type { RuleBook } from '../rules/types'
 import { widgetDef } from './catalog'
 import type { DashboardPlace, Period, PlaceWidgets, WidgetContext, WidgetInstance, WidgetKind, WidgetPlace } from './types'
@@ -15,12 +15,27 @@ export const MODULE_STRIP_LIMIT = 4
 
 export const isDashboard = (place: WidgetPlace): place is DashboardPlace => place === 'dashboard' || place === 'mainDashboard'
 
-/** How many widgets and charts a place has room for: the dashboards follow the rule book's places. */
-export function capacity(place: WidgetPlace, rules: RuleBook) {
+/** The pages of a place: the main dashboard has 3, everything else 1. */
+export const pagesOf = (place: WidgetPlace) =>
+  place === 'mainDashboard' ? Array.from({ length: MAIN_DASHBOARD_PAGES }, (_, i) => i) : [0]
+
+/** The rule book's places of a dashboard (page). */
+export function slotsOf(place: DashboardPlace, rules: RuleBook, page = 0) {
+  return place === 'mainDashboard' ? (rules.mainDashboard.pages[page]?.slots ?? []) : rules.dashboard.slots
+}
+
+/** How many widgets and charts a place (or main dashboard page) has room for. */
+export function capacity(place: WidgetPlace, rules: RuleBook, page = 0) {
   if (!isDashboard(place)) return { widgets: MODULE_STRIP_LIMIT, charts: 0 }
-  const slots = rules[place].slots
+  const slots = slotsOf(place, rules, page)
   const charts = slots.filter((s) => s === 'chart').length
   return { widgets: slots.length - charts, charts }
+}
+
+/** The widgets and charts on one page of a place. */
+export function onPage(place: PlaceWidgets, page: number) {
+  const here = (i: WidgetInstance) => (i.page ?? 0) === page
+  return { widgets: place.widgets.filter(here), charts: place.charts.filter(here) }
 }
 
 type Seed = { type: string; kind: WidgetKind; period?: Period }
@@ -93,14 +108,24 @@ export const isAvailable = (type: string, ctx: WidgetContext) => {
   return !!def && !def.unavailable?.(ctx)
 }
 
+/** The available seeds, in order, spread over the place's pages until each page is full. */
 function preset(place: DashboardPlace, ctx: WidgetContext): PlaceWidgets {
-  const room = capacity(place, ctx.rules)
-  const pick = (seeds: Seed[], count: number) =>
-    seeds
-      .filter((s) => isAvailable(s.type, ctx))
-      .slice(0, count)
-      .map((s): WidgetInstance => ({ uid: `preset-${s.type}-${s.kind}`, type: s.type, kind: s.kind, period: s.period }))
-  return { widgets: pick(PRESETS[place].widgets, room.widgets), charts: pick(PRESETS[place].charts, room.charts) }
+  const spread = (seeds: Seed[], kind: WidgetKind) => {
+    const queue = seeds.filter((s) => isAvailable(s.type, ctx))
+    return pagesOf(place).flatMap((page) => {
+      const room = capacity(place, ctx.rules, page)[kind === 'chart' ? 'charts' : 'widgets']
+      return queue.splice(0, room).map(
+        (s): WidgetInstance => ({
+          uid: `preset-${s.type}-${s.kind}`,
+          type: s.type,
+          kind: s.kind,
+          period: s.period,
+          page: place === 'mainDashboard' ? page : undefined,
+        }),
+      )
+    })
+  }
+  return { widgets: spread(PRESETS[place].widgets, 'widget'), charts: spread(PRESETS[place].charts, 'chart') }
 }
 
 const KINDS: WidgetKind[] = ['widget', 'chart']
@@ -116,7 +141,21 @@ function parseInstance(value: unknown): WidgetInstance | null {
     kind: v.kind as WidgetKind,
     period: PERIODS.includes(v.period as Period) ? (v.period as Period) : undefined,
     itemId: typeof v.itemId === 'string' ? v.itemId : undefined,
+    page: typeof v.page === 'number' && v.page >= 0 && v.page < MAIN_DASHBOARD_PAGES ? Math.floor(v.page) : undefined,
   }
+}
+
+/** Main dashboard widgets saved before the pages existed go to the first page that still has room. */
+function withPages(list: WidgetInstance[], kind: WidgetKind, rules: RuleBook): WidgetInstance[] {
+  const used = pagesOf('mainDashboard').map((page) => list.filter((i) => i.page === page).length)
+  return list.map((instance) => {
+    if (instance.page !== undefined) return instance
+    const room = (page: number) => capacity('mainDashboard', rules, page)[kind === 'chart' ? 'charts' : 'widgets']
+    const page = used.findIndex((n, p) => n < room(p))
+    const target = page < 0 ? MAIN_DASHBOARD_PAGES - 1 : page
+    used[target] += 1
+    return { ...instance, page: target }
+  })
 }
 
 function savedPlace(layout: ClientConfig['layout'], place: WidgetPlace): PlaceWidgets | null {
@@ -134,6 +173,10 @@ function savedPlace(layout: ClientConfig['layout'], place: WidgetPlace): PlaceWi
 /** A place's widgets: what the business chose, or the dashboards' automatic selection until then. */
 export function readPlace(config: Pick<ClientConfig, 'layout' | 'modules' | 'rules'>, place: WidgetPlace) {
   const saved = savedPlace(config.layout, place)
+  if (saved && place === 'mainDashboard') {
+    const rules = readRules(config)
+    return { widgets: withPages(saved.widgets, 'widget', rules), charts: withPages(saved.charts, 'chart', rules), preset: false }
+  }
   if (saved) return { ...saved, preset: false }
   if (isDashboard(place)) return { ...preset(place, { modules: config.modules, rules: readRules(config) }), preset: true }
   return { widgets: [], charts: [], preset: false }
@@ -180,15 +223,20 @@ export function useWidgetLayout() {
     [change],
   )
 
+  /** Swaps a widget with its neighbour of the same kind on the same page. */
   const move = useCallback(
     (place: WidgetPlace, uid: string, delta: -1 | 1) =>
       change(place, (current) => {
         const shift = (list: WidgetInstance[]) => {
           const from = list.findIndex((i) => i.uid === uid)
-          const to = from + delta
-          if (from < 0 || to < 0 || to >= list.length) return list
+          if (from < 0) return list
+          const page = list[from].page ?? 0
+          const samePage = list.map((i, index) => ({ i, index })).filter(({ i }) => (i.page ?? 0) === page)
+          const at = samePage.findIndex(({ index }) => index === from)
+          const neighbour = samePage[at + delta]
+          if (!neighbour) return list
           const next = [...list]
-          ;[next[from], next[to]] = [next[to], next[from]]
+          ;[next[from], next[neighbour.index]] = [next[neighbour.index], next[from]]
           return next
         }
         return { widgets: shift(current.widgets), charts: shift(current.charts) }
@@ -196,7 +244,20 @@ export function useWidgetLayout() {
     [change],
   )
 
+  /** Main dashboard: sends a widget to the end of another page. */
+  const moveToPage = useCallback(
+    (uid: string, page: number) =>
+      change('mainDashboard', (current) => {
+        const relocate = (list: WidgetInstance[]) => {
+          const instance = list.find((i) => i.uid === uid)
+          return instance ? [...list.filter((i) => i.uid !== uid), { ...instance, page }] : list
+        }
+        return { widgets: relocate(current.widgets), charts: relocate(current.charts) }
+      }),
+    [change],
+  )
+
   const reset = useCallback((place: WidgetPlace) => change(place, null), [change])
 
-  return { read, add, remove, move, reset }
+  return { read, add, remove, move, moveToPage, reset }
 }

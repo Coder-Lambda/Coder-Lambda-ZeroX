@@ -241,3 +241,18 @@
     cursor: not-allowed;
   }
 }
+@layer components {
+  .rule-slots-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+  .rule-page-name {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 360px;
+  }
+}

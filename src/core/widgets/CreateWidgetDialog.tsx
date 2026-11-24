@@ -4,12 +4,12 @@ import { useSession } from '../auth/SessionProvider'
 import { t } from '../i18n/pt-BR'
 import { haptic } from '../lib/haptic'
 import { MODULE_ICONS } from '../modules/registry'
-import { readRules } from '../rules/defaults'
+import { pageName, readRules } from '../rules/defaults'
 import { Dialog } from '../ui/Dialog'
 import { Segmented } from '../ui/Segmented'
 import { toast } from '../ui/Toaster'
 import { offeredIn } from './catalog'
-import { capacity, PLACES, readPlace, useWidgetLayout } from './store'
+import { capacity, onPage, pagesOf, PLACES, readPlace, useWidgetLayout } from './store'
 import type { Period, WidgetKind, WidgetPlace, WidgetSource } from './types'
 
 const copy = t.widgets.wizard
@@ -27,11 +27,14 @@ export function CreateWidgetDialog({
   onClose,
   initialPlace,
   initialKind,
+  initialPage = 0,
 }: {
   open: boolean
   onClose: () => void
   initialPlace?: WidgetPlace
   initialKind?: WidgetKind
+  /** Main dashboard page (0–2). */
+  initialPage?: number
 }) {
   const { active } = useSession()
   const { add } = useWidgetLayout()
@@ -40,6 +43,7 @@ export function CreateWidgetDialog({
   const [kind, setKind] = useState<WidgetKind>(initialKind ?? 'widget')
   const [period, setPeriod] = useState<Period>('daily')
   const [itemId, setItemId] = useState('')
+  const [page, setPage] = useState(initialPage)
   if (!active) return null
 
   const rules = readRules(active)
@@ -47,8 +51,10 @@ export function CreateWidgetDialog({
   const places = PLACES.filter((p) => active.modules[p])
   const offered = place ? offeredIn(place) : []
   const chosen = offered.find((o) => o.def.type === type)
-  const room = place ? capacity(place, rules) : { widgets: 0, charts: 0 }
-  const used = place ? readPlace(active, place) : { widgets: [], charts: [] }
+  const onMain = place === 'mainDashboard'
+  const targetPage = onMain ? page : 0
+  const room = place ? capacity(place, rules, targetPage) : { widgets: 0, charts: 0 }
+  const used = place ? onPage(readPlace(active, place), targetPage) : { widgets: [], charts: [] }
   const kindOptions = chosen?.kinds ?? []
   const actualKind: WidgetKind = kindOptions.includes(kind) ? kind : (kindOptions[0] ?? 'widget')
   const full = place != null && (actualKind === 'chart' ? used.charts.length >= room.charts : used.widgets.length >= room.widgets)
@@ -69,9 +75,10 @@ export function CreateWidgetDialog({
       kind: actualKind,
       period: chosen.def.periodic ? period : undefined,
       itemId: chosen.def.itemOption ? itemId || items[0]?.id : undefined,
+      page: onMain ? targetPage : undefined,
     })
     haptic('success')
-    toast(t.widgets.added(placeLabel(place, active.labels)))
+    toast(t.widgets.added(onMain ? `${placeLabel(place, active.labels)} · ${pageName(rules.mainDashboard, targetPage)}` : placeLabel(place, active.labels)))
     onClose()
   }
 
@@ -144,6 +151,17 @@ export function CreateWidgetDialog({
 
           {chosen && (
             <div className="wz-settings well">
+              {onMain && (
+                <div className="field">
+                  <span className="field-label">{t.widgets.page}</span>
+                  <Segmented
+                    label={t.widgets.page}
+                    options={pagesOf('mainDashboard').map((p) => pageName(rules.mainDashboard, p))}
+                    value={targetPage}
+                    onChange={setPage}
+                  />
+                </div>
+              )}
               {kindOptions.length > 1 && (
                 <div className="field">
                   <span className="field-label">{copy.show}</span>
@@ -185,7 +203,7 @@ export function CreateWidgetDialog({
                   <CircleAlert size={14} />
                   {copy.full(
                     actualKind,
-                    placeLabel(place, active.labels),
+                    onMain ? pageName(rules.mainDashboard, targetPage) : placeLabel(place, active.labels),
                     actualKind === 'chart' ? room.charts : room.widgets,
                   )}
                 </p>

@@ -360,3 +360,102 @@
     }
   }
 }
+@layer components {
+  /* Organize mode: each widget gets a small bar under its title. */
+  .wg-organize {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--radius-ctl);
+    background: var(--surface-2);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.28);
+  }
+  .wg-organize .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .wg-organize .btn-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  .wg-organize-page.input {
+    flex: 1;
+    min-width: 110px;
+    height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 13px;
+  }
+  .is-organizing .widget-card {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-glow) 45%, transparent);
+  }
+  .widget-empty .wg-organize {
+    margin-top: 6px;
+  }
+
+  /* Main dashboard: rename the current page while organizing. */
+  .md-rename {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .md-rename .field {
+    flex: 1 1 260px;
+    max-width: 380px;
+  }
+}
+@layer components {
+  /* Main dashboard navbar: page number marker. */
+  .md-step {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .module-tab[aria-current='page'] .md-step {
+    background: color-mix(in oklab, var(--on-accent) 18%, transparent);
+    color: var(--on-accent);
+  }
+}
+@layer components {
+  .wp-pages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .wp-page {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .wp-page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .wp-page-title .text-2 {
+    margin-left: auto;
+    font-size: 12.5px;
+  }
+  .wp-page-select.input {
+    flex: 0 1 120px;
+    min-width: 92px;
+  }
+  @container app-content (max-width: 1100px) {
+    .wp-pages {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

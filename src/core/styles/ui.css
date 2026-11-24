@@ -898,3 +898,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.hero-sub {
+  margin-top: 6px;
+  font-size: 16px;
+  opacity: 0.85;
+}
+.nav-divider {
+  margin: 8px 12px;
+  border: 0;
+  border-top: 1px solid var(--line);
+}

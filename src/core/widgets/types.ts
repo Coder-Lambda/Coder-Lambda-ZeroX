@@ -25,6 +25,8 @@ export interface WidgetInstance {
   period?: Period
   /** Production item (rule book) for production widgets. */
   itemId?: string
+  /** Main dashboard only: which of its 3 pages (0–2). */
+  page?: number
 }
 
 /** What a place holds: widgets fill its widget places, charts its chart places, in order. */

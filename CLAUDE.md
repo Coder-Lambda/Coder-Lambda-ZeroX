@@ -35,7 +35,7 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
 ## Build order (one prompt each)
 
 &onboarding& (done) → &collaborations& (done) → &personalfinance& (done) → &stock& (done) → &businessfinance& (done) →
-&rulesandactions& (done) → &widgets& (done) → &maindashboard& → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
+&rulesandactions& (done) → &widgets& (done) → &maindashboard& (done) → &whatisleft&. Each prompt fills its own module; a built module sets `Page` in
 `src/core/modules/registry.ts`, the others show their placeholder shell.
 
 - Collaborators (`src/core/modules/collaborators/`): employees (sheet import, filters, card with 7 widgets,
@@ -64,7 +64,8 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
     absence discount go into the payroll (`finance/business/payroll.ts`), money alarms show as banners.
   - Estoque: own units (product.unit is a string), unit value (`stockSummary().stockValue`), extra labels (`product.extra`).
   - Dashboards: places, each a widget or a chart (`rules.dashboard.slots`: up to 9, at most 2 charts;
-    `rules.mainDashboard.slots`: up to 15 widgets and 6 charts; limits in `SLOT_LIMITS`).
+    `rules.mainDashboard.pages`: 3 pages, each with a client-chosen name and up to 5 widgets + 2 charts;
+    limits in `SLOT_LIMITS`, page names via `pageName()`).
   - Avisos (`rules/useAlerts.ts`, bell in the shell, lazy chunk): everything the rules are warning about now.
 - Widgets (`src/core/widgets/`): `catalog.tsx` lists every widget (type, source module, widget/chart kinds,
   places, period/item options, `unavailable()` when a module or rule is off). Places: the two dashboards
@@ -72,8 +73,12 @@ UI language: Brazilian Portuguese. All strings live in `src/core/i18n/pt-BR.ts`.
   small strip at the top of each module (`WidgetStrip`, up to 4). Choices live in `ClientConfig.layout.widgets`;
   until a dashboard is customised it shows the automatic preset (`store.ts`, built from the onboarding modules).
   Widgets read one shared `WidgetDataProvider`; each is wrapped in an error boundary. Configurações › Widgets
-  (`WidgetsPage`, Criar widget wizard) manages them. The Dashboard and the Dashboard principal are real pages
-  now (`modules/dashboard/`); &maindashboard& adds the main dashboard's pages/comparisons on top.
+  (`WidgetsPage`, Criar widget wizard) manages them.
+- Dashboards (`src/core/modules/dashboard/`): the Dashboard is the first sidebar item and greets by the onboarding
+  name (bom dia / boa tarde / boa noite by the hour); the Dashboard principal is always the last sidebar item
+  (after the client's own pages) and has its own navbar of 3 pages (`/dashboard-principal/1..3`). Main dashboard
+  widgets carry `page`. "Organizar" on both dashboards moves widgets earlier/later, to another page (only into a
+  page with room) or removes them; on the main dashboard it also renames the current page.
 - Layout breakpoints that depend on room for content use `@container app-content`, not the window width.
 - Shared building blocks live in `src/core/ui` (MonthSwitch, StatTile, TextInput, Dialog, charts…) and
   `src/core/styles/ui.css` (module navbar, lists, month switch). Module CSS files only hold module-specific rules,

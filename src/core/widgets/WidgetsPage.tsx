@@ -5,10 +5,10 @@ import { useSession } from '../auth/SessionProvider'
 import { t } from '../i18n/pt-BR'
 import { PageHead } from '../layout/PageHead'
 import { MODULE_ICONS } from '../modules/registry'
-import { readRules } from '../rules/defaults'
+import { pageName, readRules } from '../rules/defaults'
 import { toast } from '../ui/Toaster'
 import { CreateWidgetDialog, placeLabel } from './CreateWidgetDialog'
-import { capacity, isDashboard, PLACES, useWidgetLayout } from './store'
+import { capacity, isDashboard, onPage, pagesOf, PLACES, useWidgetLayout } from './store'
 import type { WidgetInstance, WidgetKind, WidgetPlace } from './types'
 import { widgetTitle } from './WidgetSlot'
 import './widgets.css'
@@ -21,6 +21,7 @@ export default function WidgetsPage() {
   const [params, setParams] = useSearchParams()
   const requested = PLACES.find((p) => p === params.get('criar'))
   const requestedKind = (params.get('tipo') === 'chart' ? 'chart' : 'widget') as WidgetKind
+  const requestedPage = Math.min(2, Math.max(0, (Number(params.get('pagina')) || 1) - 1))
   const [creating, setCreating] = useState(params.has('criar'))
   if (!active) return null
   const places = PLACES.filter((p) => active.modules[p])
@@ -60,6 +61,7 @@ export default function WidgetsPage() {
         onClose={close}
         initialPlace={requested}
         initialKind={requestedKind}
+        initialPage={requestedPage}
       />
     </>
   )
@@ -67,17 +69,27 @@ export default function WidgetsPage() {
 
 function PlaceCard({ place }: { place: WidgetPlace }) {
   const { active } = useSession()
-  const { read, remove, move, reset } = useWidgetLayout()
+  const { read, remove, move, moveToPage, reset } = useWidgetLayout()
   if (!active) return null
   const rules = readRules(active)
-  const room = capacity(place, rules)
-  const { widgets, charts, preset } = read(place)
+  const all = read(place)
+  const preset = all.preset
+  const pages = pagesOf(place)
+  const main = place === 'mainDashboard'
   const Icon = MODULE_ICONS[place]
   const label = placeLabel(place, active.labels)
   const dashboard = isDashboard(place)
+  const rooms = pages.map((page) => capacity(place, rules, page))
+  const total = { widgets: rooms.reduce((s, r) => s + r.widgets, 0), charts: rooms.reduce((s, r) => s + r.charts, 0) }
+  const shown = (key: 'widgets' | 'charts') =>
+    pages.reduce((s, page, i) => s + Math.min(onPage(all, page)[key].length, rooms[i][key]), 0)
+  const hasRoom = (kind: WidgetKind, page: number) => {
+    const key = kind === 'chart' ? 'charts' : 'widgets'
+    return onPage(all, page)[key].length < rooms[page][key]
+  }
 
   return (
-    <section className="glass card span-6 wp-card" aria-label={label}>
+    <section className={`glass card ${main ? 'span-12' : 'span-6'} wp-card`} aria-label={label}>
       <header className="wp-head">
         <span className="wp-icon" aria-hidden="true">
           <Icon />
@@ -86,22 +98,58 @@ function PlaceCard({ place }: { place: WidgetPlace }) {
           <h2 className="card-title mb-0">{label}</h2>
           <p className="text-2 num text-[13px]">
             {dashboard
-              ? `${copy.capacity.widgets(Math.min(widgets.length, room.widgets), room.widgets)} · ${copy.capacity.charts(Math.min(charts.length, room.charts), room.charts)}`
-              : copy.capacity.module(widgets.length, room.widgets)}
+              ? `${copy.capacity.widgets(shown('widgets'), total.widgets)} · ${copy.capacity.charts(shown('charts'), total.charts)}`
+              : copy.capacity.module(all.widgets.length, total.widgets)}
           </p>
         </div>
       </header>
 
       {preset && <p className="text-2 text-[13px]">{copy.preset}</p>}
 
-      {widgets.length + charts.length === 0 ? (
-        <p className="wg-muted">{dashboard ? copy.emptyDashboard : copy.emptyModule}</p>
-      ) : (
-        <>
-          <InstanceList place={place} kind="widget" list={widgets} room={room.widgets} onRemove={remove} onMove={move} />
-          {dashboard && <InstanceList place={place} kind="chart" list={charts} room={room.charts} onRemove={remove} onMove={move} />}
-        </>
-      )}
+      <div className={main ? 'wp-pages' : undefined}>
+        {pages.map((page, i) => {
+          const here = onPage(all, page)
+          return (
+            <div key={page} className="wp-page">
+              {main && (
+                <h3 className="wp-page-title">
+                  <span className="md-step num" aria-hidden="true">
+                    {page + 1}
+                  </span>
+                  {pageName(rules.mainDashboard, page)}
+                  <span className="text-2 num">
+                    {here.widgets.length}/{rooms[i].widgets} · {here.charts.length}/{rooms[i].charts}
+                  </span>
+                </h3>
+              )}
+              {here.widgets.length + here.charts.length === 0 ? (
+                <p className="wg-muted">{dashboard ? copy.emptyDashboard : copy.emptyModule}</p>
+              ) : (
+                (['widget', 'chart'] as const).map((kind) => (
+                  <InstanceList
+                    key={kind}
+                    place={place}
+                    kind={kind}
+                    list={kind === 'chart' ? here.charts : here.widgets}
+                    room={kind === 'chart' ? rooms[i].charts : rooms[i].widgets}
+                    onRemove={remove}
+                    onMove={move}
+                    pages={
+                      main
+                        ? {
+                            current: page,
+                            options: pages.map((p) => ({ page: p, name: pageName(rules.mainDashboard, p), room: hasRoom(kind, p) })),
+                            onMove: moveToPage,
+                          }
+                        : undefined
+                    }
+                  />
+                ))
+              )}
+            </div>
+          )
+        })}
+      </div>
 
       <div className="wp-actions">
         {dashboard && (
@@ -128,6 +176,12 @@ function PlaceCard({ place }: { place: WidgetPlace }) {
   )
 }
 
+interface PageChoice {
+  current: number
+  options: { page: number; name: string; room: boolean }[]
+  onMove: (uid: string, page: number) => void
+}
+
 function InstanceList({
   place,
   kind,
@@ -135,6 +189,7 @@ function InstanceList({
   room,
   onRemove,
   onMove,
+  pages,
 }: {
   place: WidgetPlace
   kind: WidgetKind
@@ -142,6 +197,8 @@ function InstanceList({
   room: number
   onRemove: (place: WidgetPlace, uid: string) => void
   onMove: (place: WidgetPlace, uid: string, delta: -1 | 1) => void
+  /** Main dashboard: send a widget to another page. */
+  pages?: PageChoice
 }) {
   if (list.length === 0) return null
   const Icon = kind === 'chart' ? ChartColumn : LayoutGrid
@@ -157,6 +214,25 @@ function InstanceList({
               <span className="person-name">{title}</span>
               {hidden && <span className="person-sub">{copy.hidden}</span>}
             </span>
+            {pages && (
+              <select
+                className="input select wg-organize-page wp-page-select"
+                aria-label={copy.organize.toPage(title)}
+                value={pages.current}
+                onChange={(e) => {
+                  const target = Number(e.target.value)
+                  pages.onMove(instance.uid, target)
+                  toast(copy.organize.moved(title, pages.options[target].name))
+                }}
+              >
+                {pages.options.map((o) => (
+                  <option key={o.page} value={o.page} disabled={o.page !== pages.current && !o.room}>
+                    {o.name}
+                    {o.page !== pages.current && !o.room ? ` · ${copy.organize.full}` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
             <button type="button" className="btn btn-icon btn-ghost tactile" aria-label={copy.moveUp(title)} disabled={i === 0} onClick={() => onMove(place, instance.uid, -1)}>
               <ArrowUp />
             </button>

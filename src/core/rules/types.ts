@@ -114,13 +114,25 @@ export interface DashboardRules {
   slots: SlotKind[]
 }
 
+/** One of the main dashboard's three pages: a name the client chooses and its own places. */
+export interface MainDashboardPage {
+  /** Empty = "Página n". */
+  name: string
+  slots: SlotKind[]
+}
+
+/** The main dashboard has its own navbar of three pages, each with up to 5 widgets and 2 charts. */
+export interface MainDashboardRules {
+  pages: MainDashboardPage[]
+}
+
 export interface RuleBook {
   collaborators: CollaboratorRules
   personalFinance: PersonalFinanceRules
   businessFinance: BusinessFinanceRules
   stock: StockRules
   dashboard: DashboardRules
-  mainDashboard: DashboardRules
+  mainDashboard: MainDashboardRules
 }
 
 export type RuleChapter = keyof RuleBook
