@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "dev:demo": "cross-env VITE_CLIENT_ID=demo vite",
     "build:demo": "cross-env VITE_CLIENT_ID=demo vite build --outDir dist/demo",
+    "dev:tunnel": "cross-env VITE_CLIENT_ID=demo __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.trycloudflare.com vite",
+    "dev:tunnel:seed": "cross-env VITE_CLIENT_ID=demo VITE_DEMO_SEED=1 __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=.trycloudflare.com vite",
     "dev:dahjon": "cross-env VITE_CLIENT_ID=dahjon vite",
     "build:dahjon": "cross-env VITE_CLIENT_ID=dahjon vite build --outDir dist/dahjon"
   },

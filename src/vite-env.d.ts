@@ -12,3 +12,9 @@ declare module '@client-extension' {
   const extension: import('./core/extensions/types').ClientExtension
   export default extension
 }
+
+interface ImportMetaEnv {
+  readonly VITE_CLIENT_ID?: string
+  /** '1' = shareable demo with sample data (npm run dev:tunnel:seed). */
+  readonly VITE_DEMO_SEED?: string
+}
