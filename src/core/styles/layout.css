@@ -44,10 +44,10 @@
   margin-bottom: 18px;
 }
 .sidebar-brand .logo {
-  height: 20px;
+  height: 28px;
 }
 .sidebar.is-collapsed .sidebar-brand .logo {
-  height: 12px;
+  height: 24px;
 }
 .sidebar-nav {
   display: flex;

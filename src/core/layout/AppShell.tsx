@@ -64,7 +64,7 @@ export function AppShell() {
 
         <aside className={`sidebar glass${collapsed ? ' is-collapsed' : ''}`}>
           <div className="sidebar-brand">
-            <Logo />
+            <Logo mark />
           </div>
           <nav className="sidebar-nav" aria-label={t.shell.navModules}>
             {moduleEntries.map((entry) => (
